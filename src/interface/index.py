@@ -1,7 +1,7 @@
 import gradio as gr
 from gradio_medchatinput import MedChatInput
 from src.voice_chat import VoiceChatState
-from src.llm import get_available_models
+from src.llm import get_available_models, is_vision_model
 from src.audio.tts import get_voice_info
 from src.config.asr_settings import language_options
 import src.config.asr_settings as asr_config
@@ -10,26 +10,29 @@ from src.config.tts_settings import piper_voice_options, get_available_languages
 from src.config.base_settings import OPENROUTER_MODEL
 from .handlers import (
     update_regions, update_speaker_options, filter_voices_by_selected_language,
-    send_message, reset_conversation, change_llm_model, update_language_settings,
-    update_tts_voice, update_tts_settings, test_tts_voice
+    send_message, generate_tts_for_latest_message, reset_conversation,
+    change_llm_model, update_language_settings, update_tts_voice, update_tts_settings,
+    test_tts_voice
 )
 
 
 def create_interface():
     with gr.Blocks(title="Voice AI Assistant", theme=gr.themes.Soft(), js=MedChatInput.get_immediate_transcription_js()) as demo:
         state = gr.State(value=VoiceChatState())
+        tts_trigger = gr.State(value="")
 
         with gr.Row():
             with gr.Column(scale=3):
                 chatbot = gr.Chatbot(
                     label="💬 Conversation",
                     height=400,
-                    show_copy_button=True
+                    show_copy_button=True,
+                    type="messages"
                 )
 
                 user_input = MedChatInput(
                     label="Your message",
-                    placeholder="Type your message or record audio...",
+                    placeholder="Type your message, record audio, or upload images...",
                     sources=["upload", "microphone"],
                     auto_transcribe=True,
                     transcription_language=asr_config.current_language,
@@ -42,10 +45,12 @@ def create_interface():
                     lines=1,
                     max_lines=3
                 )
-                
-                transcription_trigger = gr.Textbox(visible=False, elem_id="transcription_trigger")
-                transcription_result = gr.Textbox(visible=False, elem_id="transcription_result")
-                
+
+                transcription_trigger = gr.Textbox(
+                    visible=False, elem_id="transcription_trigger")
+                transcription_result = gr.Textbox(
+                    visible=False, elem_id="transcription_result")
+
                 transcription_trigger.change(
                     fn=MedChatInput.transcribe,
                     inputs=[transcription_trigger],
@@ -67,7 +72,7 @@ def create_interface():
                 with gr.Accordion("⚙️ Settings", open=False):
 
                     gr.HTML("<h4>🧠 AI Model (OpenRouter)</h4>")
-                    
+
                     available_models = get_available_models()
                     llm_model_dropdown = gr.Dropdown(
                         choices=available_models,
@@ -75,6 +80,12 @@ def create_interface():
                         label="LLM Model",
                         info="Choose AI model for responses"
                     )
+
+                    vision_status = gr.HTML(
+                        value=f"🔍 Vision Support: {'Yes' if is_vision_model(OPENROUTER_MODEL) else 'No'}",
+                        elem_id="vision_status"
+                    )
+
                     change_llm_btn = gr.Button("Apply LLM Model", size="sm")
 
                     gr.HTML("<hr>")
@@ -172,7 +183,7 @@ def create_interface():
 
                 status_text = gr.Textbox(
                     label="📊 Status",
-                    value=f"Ready",
+                    value=f"Ready - Vision: {'Enabled' if is_vision_model(OPENROUTER_MODEL) else 'Disabled'}",
                     interactive=False,
                     lines=5
                 )
@@ -191,16 +202,29 @@ def create_interface():
             status = update_language_settings(language, region)
             return gr.update(value=status)
 
-        def on_send_message(message_data, state):
-            if message_data is None or not message_data.get("text", "").strip():
-                return state.get_conversation_display(), state, None, {"text": "", "files": []}, "Please enter a message"
+        def on_send_message_step1(message_data, state):
+            if message_data is None or (not message_data.get("text", "").strip() and not message_data.get("files", [])):
+                return state.get_conversation_display(), state, {"text": "", "files": []}, "Please enter a message or upload an image", ""
 
-            chat_history, new_state, audio, cleared_input = send_message(message_data, state)
-            return chat_history, new_state, audio, cleared_input, "Message sent successfully"
-        
+            chat_history, new_state, cleared_input, status = send_message(
+                message_data, state)
+
+            latest_ai_message = ""
+            if new_state.conversation and new_state.conversation[-1]["role"] == "assistant":
+                latest_ai_message = new_state.conversation[-1]["content"]
+
+            return chat_history, new_state, cleared_input, status, latest_ai_message
+
+        def on_send_message_step2(ai_message, state):
+            if not ai_message or not ai_message.strip():
+                return None
+
+            audio_file = generate_tts_for_latest_message(state, ai_message)
+            return audio_file
 
         def on_tts_language_filter_change(language_filter):
-            filtered_voices = filter_voices_by_selected_language(language_filter)
+            filtered_voices = filter_voices_by_selected_language(
+                language_filter)
             if filtered_voices:
                 default_voice = filtered_voices[0][1]
                 return gr.update(choices=filtered_voices, value=default_voice)
@@ -211,7 +235,8 @@ def create_interface():
                 return "", gr.update(), ""
 
             status = update_tts_voice(voice_key)
-            speaker_update, speaker_info_text = update_speaker_options(voice_key)
+            speaker_update, speaker_info_text = update_speaker_options(
+                voice_key)
 
             voice_info = get_voice_info(voice_key)
             lang_info = voice_info.get('language', {})
@@ -221,10 +246,21 @@ def create_interface():
 
             return detailed_status, speaker_update, speaker_info_text
 
+        def on_model_change(model_name):
+            status = change_llm_model(model_name)
+            vision_capable = is_vision_model(model_name)
+            vision_html = f"🔍 Vision Support: {'Yes' if vision_capable else 'No'}"
+            full_status = f"{status}\nVision: {'Enabled' if vision_capable else 'Disabled'}"
+            return full_status, vision_html
+
         user_input.submit(
-            fn=on_send_message,
+            fn=on_send_message_step1,
             inputs=[user_input, state],
-            outputs=[chatbot, state, response_audio, user_input, status_text]
+            outputs=[chatbot, state, user_input, status_text, tts_trigger]
+        ).then(
+            fn=on_send_message_step2,
+            inputs=[tts_trigger, state],
+            outputs=[response_audio]
         )
 
         clear_btn.click(
@@ -233,11 +269,10 @@ def create_interface():
             outputs=[chatbot, state, response_audio]
         )
 
-
         change_llm_btn.click(
-            fn=change_llm_model,
+            fn=on_model_change,
             inputs=[llm_model_dropdown],
-            outputs=[status_text]
+            outputs=[status_text, vision_status]
         )
 
         language_dropdown.change(

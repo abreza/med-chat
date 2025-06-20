@@ -1,6 +1,6 @@
 import gradio as gr
 from src.voice_chat import VoiceChatState
-from src.llm import generate_ai_response, get_available_models, set_model
+from src.llm import generate_ai_response, set_model
 from src.audio.tts import (
     create_speech_audio, change_voice_settings, get_current_voice_settings,
     get_voice_info, validate_voice_exists
@@ -58,24 +58,61 @@ def filter_voices_by_selected_language(language_filter):
 
 def send_message(message_data, state: VoiceChatState):
     if message_data is None:
-        return state.get_conversation_display(), state, None, {"text": "", "files": []}
-    
+        return state.get_conversation_display(), state, {"text": "", "files": []}, "No message provided"
+
     message_text = message_data.get("text", "").strip()
     message_files = message_data.get("files", [])
-    
-    if not message_text:
-        return state.get_conversation_display(), state, None, {"text": "", "files": []}
 
-    state.add_message("user", message_text)
+    image_files = []
+    if message_files:
+        for file in message_files:
+            if file is not None:
+                file_path = file.name if hasattr(file, 'name') else str(file)
+                if any(file_path.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                    image_files.append(file)
+
+    if not message_text and not image_files:
+        return state.get_conversation_display(), state, {"text": "", "files": []}, "Please enter a message or upload an image"
+
+    state.add_message("user", message_text,
+                      image_files if image_files else None)
 
     messages = state.get_messages_for_api()
     ai_response = generate_ai_response(messages)
-
     state.add_message("assistant", ai_response)
 
-    audio_file = create_speech_audio(ai_response)
+    files = message_data.get("files", [])
+    image_count = len([f for f in files if f and any(str(f).lower().endswith(
+        ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'])])
+    status = "Message sent successfully"
+    if image_count > 0:
+        status += f" (with {image_count} image{'s' if image_count > 1 else ''})"
 
-    return state.get_conversation_display(), state, audio_file, {"text": "", "files": []}
+    return state.get_conversation_display(), state, {"text": "", "files": []}, status
+
+
+def generate_tts_for_latest_message(state: VoiceChatState, ai_message: str = None):
+    if ai_message and ai_message.strip():
+        message_to_speak = ai_message
+    else:
+        if not state.conversation:
+            return None
+
+        message_to_speak = None
+        for msg in reversed(state.conversation):
+            if msg["role"] == "assistant":
+                message_to_speak = msg["content"]
+                break
+
+        if not message_to_speak:
+            return None
+
+    try:
+        audio_file = create_speech_audio(message_to_speak)
+        return audio_file
+    except Exception as e:
+        print(f"TTS generation error: {e}")
+        return None
 
 
 def reset_conversation(state: VoiceChatState):

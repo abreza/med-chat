@@ -23,12 +23,15 @@ def generate_ai_response(messages):
 - Helping users understand symptoms and medical conditions
 - Offering guidance on first aid and preventive care
 - Providing general recommendations for healthy lifestyle choices
+- Analyzing medical images when provided (X-rays, lab results, etc.) and providing general observations
 
 Response Guidelines:
 - Keep responses concise and easily understandable
 - Respond in fluent and simple Persian language
 - Avoid creating unnecessary alarm and respond with compassion and care
-- Maintain a helpful and supportive tone throughout conversations"""
+- Maintain a helpful and supportive tone throughout conversations
+- When analyzing images, provide general observations but always recommend consulting with healthcare professionals for definitive diagnosis
+- For medical images, describe what you can observe but emphasize the importance of professional medical interpretation"""
         }
 
         formatted_messages = [system_message] + messages
@@ -53,6 +56,8 @@ Response Guidelines:
             return "عذر می‌خواهم، در حال حاضر امکان پاسخ‌گویی وجود ندارد. لطفا بعدا دوباره تلاش کنید."
         elif "rate_limit" in str(e).lower():
             return "به دلیل محدودیت نرخ درخواست، لطفا کمی صبر کنید و دوباره تلاش کنید."
+        elif "vision" in str(e).lower():
+            return "مدل انتخاب شده از تصاویر پشتیبانی نمی‌کند. لطفا مدلی با قابلیت بینایی انتخاب کنید."
         else:
             return "خطایی در سیستم رخ داده است. لطفا دوباره تلاش کنید."
 
@@ -60,20 +65,21 @@ Response Guidelines:
 def get_available_models():
     try:
         return [
-            "qwen/qwen3-14b",
-            "microsoft/phi-4",
             "openai/gpt-4.1-nano",
             "openai/gpt-4.1-mini",
+            "openai/gpt-4.1",
             "anthropic/claude-4-sonnet",
             "anthropic/claude-4-opus",
-            "openai/gpt-4.1",
             "google/gemini-2.5-pro",
             "anthropic/claude-3.7-sonnet",
             "google/gemini-2.0-flash",
-            "meta-llama/llama-4-scout",
-            "meta-llama/llama-4-maverick",
             "anthropic/claude-3.5-sonnet",
             "google/gemini-2.5-flash",
+            "meta-llama/llama-3.2-11b-vision-instruct",
+            "qwen/qwen3-14b",
+            "microsoft/phi-4",
+            "meta-llama/llama-4-scout",
+            "meta-llama/llama-4-maverick",
             "anthropic/claude-3.5-haiku",
             "google/gemini-2.0-flash-lite",
             "deepseek/deepseek-r1",
@@ -82,7 +88,6 @@ def get_available_models():
             "cohere/command-r-plus",
             "nvidia/llama-3.1-nemotron-70b-instruct",
             "google/gemma-2-27b-it",
-            "meta-llama/llama-3.2-11b-vision-instruct",
             "mistralai/mistral-7b-instruct",
         ]
     except Exception as e:
@@ -96,3 +101,20 @@ def set_model(model_name):
         OPENROUTER_MODEL = model_name
         return True
     return False
+
+
+def is_vision_model(model_name):
+    vision_models = [
+        "openai/gpt-4.1",
+        "openai/gpt-4.1-nano",
+        "openai/gpt-4.1-mini",
+        "anthropic/claude-4-sonnet",
+        "anthropic/claude-4-opus",
+        "google/gemini-2.5-pro",
+        "anthropic/claude-3.7-sonnet",
+        "google/gemini-2.0-flash",
+        "anthropic/claude-3.5-sonnet",
+        "google/gemini-2.5-flash",
+        "meta-llama/llama-3.2-11b-vision-instruct",
+    ]
+    return model_name in vision_models

@@ -18,8 +18,8 @@ from gradio.data_classes import FileData, GradioModel
 from gradio.events import Events
 from gradio.i18n import I18nData
 
-from .audio.transcribtion import transcribe
-from .audio.setup_dolphin import setup_dolphin_model
+from .asr.transcribtion import transcribe
+from .asr.setup_dolphin import setup_dolphin_model
 
 if TYPE_CHECKING:
     from gradio.components import Timer
@@ -60,6 +60,56 @@ class MedChatInput(FormComponent):
         Events.blur,
         Events.stop,
     ]
+    
+    @staticmethod
+    def get_immediate_transcription_js(transcription_trigger_id: str="transcription_trigger", transcription_result_id: str="transcription_result") -> str:
+        return """
+function() {
+    console.log("Setting up immediate transcription...");
+    
+    // Set up global transcription function
+    window.transcribeAudioImmediate = function(base64Audio) {
+        return new Promise((resolve) => {
+            // Find the hidden input and output elements
+            const triggerEl = document.getElementById('""" + transcription_trigger_id + """').querySelector('textarea, input');
+            const resultEl = document.getElementById('""" + transcription_result_id + """').querySelector('textarea, input');
+            
+            if (!triggerEl || !resultEl) {
+                console.error('Could not find transcription elements');
+                resolve('');
+                return;
+            }
+            
+            // Set up listener for result
+            const originalValue = resultEl.value;
+            let checkCount = 0;
+            const maxChecks = 500; // 50 seconds timeout
+            
+            const checkForResult = () => {
+                checkCount++;
+                if (resultEl.value !== originalValue && resultEl.value !== '') {
+                    const result = resultEl.value;
+                    resolve(result);
+                } else if (checkCount < maxChecks) {
+                    setTimeout(checkForResult, 100);
+                } else {
+                    console.warn('Transcription timeout');
+                    resolve('');
+                }
+            };
+            
+            // Trigger transcription
+            triggerEl.value = base64Audio;
+            triggerEl.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Start checking for result
+            setTimeout(checkForResult, 100);
+        });
+    };
+    
+    console.log("Immediate transcription setup complete");
+}
+"""
 
     def __init__(
         self,

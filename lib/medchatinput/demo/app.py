@@ -24,56 +24,8 @@ def process_input(user_input):
     return "\n".join(response_parts)
 
 
-js = """
-function() {
-    console.log("Setting up immediate transcription...");
-    
-    // Set up global transcription function
-    window.transcribeAudioImmediate = function(base64Audio) {
-        return new Promise((resolve) => {
-            // Find the hidden input and output elements
-            const triggerEl = document.getElementById('transcription_trigger').querySelector('textarea, input');
-            const resultEl = document.getElementById('transcription_result').querySelector('textarea, input');
-            
-            if (!triggerEl || !resultEl) {
-                console.error('Could not find transcription elements');
-                resolve('');
-                return;
-            }
-            
-            // Set up listener for result
-            const originalValue = resultEl.value;
-            let checkCount = 0;
-            const maxChecks = 500; // 50 seconds timeout
-            
-            const checkForResult = () => {
-                checkCount++;
-                if (resultEl.value !== originalValue && resultEl.value !== '') {
-                    const result = resultEl.value;
-                    resolve(result);
-                } else if (checkCount < maxChecks) {
-                    setTimeout(checkForResult, 100);
-                } else {
-                    console.warn('Transcription timeout');
-                    resolve('');
-                }
-            };
-            
-            // Trigger transcription
-            triggerEl.value = base64Audio;
-            triggerEl.dispatchEvent(new Event('input', { bubbles: true }));
-            
-            // Start checking for result
-            setTimeout(checkForResult, 100);
-        });
-    };
-    
-    console.log("Immediate transcription setup complete");
-}
-"""
-
 if __name__ == "__main__":
-    with gr.Blocks(title="Medical Chat with Voice Input", js=js) as demo:
+    with gr.Blocks(title="Medical Chat with Voice Input", js=MedChatInput.get_immediate_transcription_js()) as demo:
         chatbot = gr.Chatbot(label="Conversation")
         
         user_input = MedChatInput(

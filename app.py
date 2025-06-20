@@ -1,4 +1,4 @@
-from src.interface import create_interface
+from src.interface.index import create_interface
 
 
 def main():

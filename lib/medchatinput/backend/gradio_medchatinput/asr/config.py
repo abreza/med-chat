@@ -41,4 +41,4 @@ for lang_region, names in LANGUAGE_REGION_CODES.items():
         language_to_regions[lang].append((f"{region}: {names[0]}", region))
 
 current_language = "fa"
-current_region = None
+current_region = "IR"

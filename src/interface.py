@@ -1,12 +1,11 @@
 import gradio as gr
+from gradio_medchatinput import MedChatInput
 from .voice_chat import VoiceChatState
 from .llm import generate_ai_response, get_available_models, set_model
-from src.audio.transcription import transcribe
 from src.audio.tts import (
     create_speech_audio, change_voice_settings, get_current_voice_settings,
     get_voice_info, validate_voice_exists
 )
-from src.audio.core.dolphin import setup_dolphin_model
 from src.config.asr_settings import language_options, language_to_regions, ASR_MODELS
 import src.config.asr_settings as asr_config
 import src.config.tts_settings as tts_config
@@ -60,23 +59,17 @@ def filter_voices_by_selected_language(language_filter):
     return filtered_voices
 
 
-def transcribe_voice_to_text(audio_input, language, region):
-    if audio_input is None:
-        return "", "No audio recorded"
+def send_message(message_data, state: VoiceChatState):
+    if message_data is None:
+        return state.get_conversation_display(), state, None, {"text": "", "files": []}
+    
+    message_text = message_data.get("text", "").strip()
+    message_files = message_data.get("files", [])
+    
+    if not message_text:
+        return state.get_conversation_display(), state, None, {"text": "", "files": []}
 
-    user_text = transcribe(audio_input, language, region)
-
-    if not user_text:
-        return "", "No speech detected"
-
-    return user_text, f"Transcribed: {user_text}"
-
-
-def send_message(message, state: VoiceChatState):
-    if not message.strip():
-        return state.get_conversation_display(), state, None, ""
-
-    state.add_message("user", message)
+    state.add_message("user", message_text)
 
     messages = state.get_messages_for_api()
     ai_response = generate_ai_response(messages)
@@ -85,19 +78,13 @@ def send_message(message, state: VoiceChatState):
 
     audio_file = create_speech_audio(ai_response)
 
-    return state.get_conversation_display(), state, audio_file, ""
+    return state.get_conversation_display(), state, audio_file, {"text": "", "files": []}
 
 
 def reset_conversation(state: VoiceChatState):
     state.clear_conversation()
     return [], state, None
 
-
-def change_asr_model(model_name, state: VoiceChatState):
-    model_key = ASR_MODELS.get(model_name.split(" ")[0], "small")
-    success = setup_dolphin_model(model_key)
-    status = f"ASR Model changed to: {model_name}" if success else f"Failed to load model: {model_name}"
-    return status
 
 
 def change_llm_model(model_name):
@@ -159,12 +146,7 @@ def test_tts_voice(voice_key, speaker_id, speed, noise_scale, noise_scale_w):
         noise_scale_w=noise_scale_w
     )
 
-    voice_info = get_voice_info(voice_key)
-    voice_name = voice_info.get('voice_name', 'voice')
-    language_info = voice_info.get('language', {})
-    language_name = language_info.get('name_english', 'this language')
-
-    test_text = f"سلام اسم من یک موتور سخن‌گو پارسی هستم.."
+    test_text = f"سلام من یک موتور سخن‌گو پارسی هستم.."
     audio_file = create_speech_audio(test_text)
 
     change_voice_settings(**original_settings)
@@ -172,8 +154,57 @@ def test_tts_voice(voice_key, speaker_id, speed, noise_scale, noise_scale_w):
     return audio_file
 
 
+immediate_transcription_js = """
+function() {
+    console.log("Setting up immediate transcription...");
+    
+    // Set up global transcription function
+    window.transcribeAudioImmediate = function(base64Audio) {
+        return new Promise((resolve) => {
+            // Find the hidden input and output elements
+            const triggerEl = document.getElementById('transcription_trigger').querySelector('textarea, input');
+            const resultEl = document.getElementById('transcription_result').querySelector('textarea, input');
+            
+            if (!triggerEl || !resultEl) {
+                console.error('Could not find transcription elements');
+                resolve('');
+                return;
+            }
+            
+            // Set up listener for result
+            const originalValue = resultEl.value;
+            let checkCount = 0;
+            const maxChecks = 500; // 50 seconds timeout
+            
+            const checkForResult = () => {
+                checkCount++;
+                if (resultEl.value !== originalValue && resultEl.value !== '') {
+                    const result = resultEl.value;
+                    resolve(result);
+                } else if (checkCount < maxChecks) {
+                    setTimeout(checkForResult, 100);
+                } else {
+                    console.warn('Transcription timeout');
+                    resolve('');
+                }
+            };
+            
+            // Trigger transcription
+            triggerEl.value = base64Audio;
+            triggerEl.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Start checking for result
+            setTimeout(checkForResult, 100);
+        });
+    };
+    
+    console.log("Immediate transcription setup complete");
+}
+"""
+
+
 def create_interface():
-    with gr.Blocks(title="Voice AI Assistant", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Voice AI Assistant", theme=gr.themes.Soft(), js=immediate_transcription_js) as demo:
         state = gr.State(value=VoiceChatState())
 
         with gr.Row():
@@ -184,26 +215,33 @@ def create_interface():
                     show_copy_button=True
                 )
 
-                with gr.Row():
-                    text_input = gr.Textbox(
-                        label="",
-                        placeholder="Type your message or use voice input...",
-                        scale=4,
-                        lines=1,
-                        max_lines=3
-                    )
+                user_input = MedChatInput(
+                    label="Your message",
+                    placeholder="Type your message or record audio...",
+                    sources=["upload", "microphone"],
+                    auto_transcribe=True,
+                    transcription_language=asr_config.current_language,
+                    transcription_region=asr_config.current_region,
+                    keep_audio_after_transcribe=False,
+                    file_types=["image", "audio", "text"],
+                    max_plain_text_length=2000,
+                    submit_btn="Send",
+                    stop_btn=False,
+                    lines=1,
+                    max_lines=3
+                )
+                
+                transcription_trigger = gr.Textbox(visible=False, elem_id="transcription_trigger")
+                transcription_result = gr.Textbox(visible=False, elem_id="transcription_result")
+                
+                transcription_trigger.change(
+                    fn=MedChatInput.transcribe,
+                    inputs=[transcription_trigger],
+                    outputs=[transcription_result],
+                    show_progress=False
+                )
 
-                    with gr.Column(scale=1, min_width=200):
-                        voice_btn = gr.Audio(
-                            label="🎤",
-                            sources=["microphone"],
-                            type="numpy",
-                            elem_classes=["voice-button"]
-                        )
-
                 with gr.Row():
-                    send_btn = gr.Button(
-                        "Send Message", variant="primary", scale=2)
                     clear_btn = gr.Button(
                         "Clear Chat", variant="secondary", scale=1)
 
@@ -230,23 +268,15 @@ def create_interface():
                     gr.HTML("<hr>")
 
                     gr.HTML("<h4>🎙️ Speech Recognition</h4>")
-                    asr_model_dropdown = gr.Dropdown(
-                        choices=["base (140M)", "small (372M)"],
-                        value="small (372M)",
-                        label="ASR Model Size",
-                        info="Dolphin ASR model"
-                    )
-                    change_model_btn = gr.Button("Apply ASR Model", size="sm")
-
                     language_dropdown = gr.Dropdown(
                         choices=language_options,
-                        value="fa",
+                        value=asr_config.current_language,
                         label="Language",
                         info="Speech recognition language"
                     )
                     region_dropdown = gr.Dropdown(
                         choices=[],
-                        value=None,
+                        value=asr_config.current_region,
                         label="Region",
                         visible=False,
                         info="Regional variant"
@@ -330,7 +360,7 @@ def create_interface():
 
                 status_text = gr.Textbox(
                     label="📊 Status",
-                    value=f"Ready - OpenRouter ({OPENROUTER_MODEL}), Dolphin ASR & Piper TTS Initialized\nLoaded {len(PIPER_VOICES)} voices from voices.json",
+                    value=f"Ready",
                     interactive=False,
                     lines=5
                 )
@@ -349,28 +379,19 @@ def create_interface():
             status = update_language_settings(language, region)
             return gr.update(value=status)
 
-        def on_voice_input(audio, language, region):
-            text, status = transcribe_voice_to_text(audio, language, region)
-            return text, status
+        def on_send_message(message_data, state):
+            if message_data is None or not message_data.get("text", "").strip():
+                return state.get_conversation_display(), state, None, {"text": "", "files": []}, "Please enter a message"
 
-        def on_send_message(text, state):
-            if not text.strip():
-                return state.get_conversation_display(), state, None, text, "Please enter a message"
-
-            chat_history, new_state, audio, _ = send_message(text, state)
-            return chat_history, new_state, audio, "", "Message sent successfully"
-
-        def on_model_change(model_name):
-            status = change_asr_model(model_name, state)
-            return status
+            chat_history, new_state, audio, cleared_input = send_message(message_data, state)
+            return chat_history, new_state, audio, cleared_input, "Message sent successfully"
 
         def on_llm_model_change(model_name):
             status = change_llm_model(model_name)
             return status
 
         def on_tts_language_filter_change(language_filter):
-            filtered_voices = filter_voices_by_selected_language(
-                language_filter)
+            filtered_voices = filter_voices_by_selected_language(language_filter)
             if filtered_voices:
                 default_voice = filtered_voices[0][1]
                 return gr.update(choices=filtered_voices, value=default_voice)
@@ -381,8 +402,7 @@ def create_interface():
                 return "", gr.update(), ""
 
             status = update_tts_voice(voice_key)
-            speaker_update, speaker_info_text = update_speaker_options(
-                voice_key)
+            speaker_update, speaker_info_text = update_speaker_options(voice_key)
 
             voice_info = get_voice_info(voice_key)
             lang_info = voice_info.get('language', {})
@@ -393,31 +413,17 @@ def create_interface():
             return detailed_status, speaker_update, speaker_info_text
 
         def on_apply_tts_settings(voice_key, speaker_id, speed, noise_scale, noise_scale_w):
-            status = update_tts_settings(
-                voice_key, speaker_id, speed, noise_scale, noise_scale_w)
+            status = update_tts_settings(voice_key, speaker_id, speed, noise_scale, noise_scale_w)
             return status
 
         def on_test_tts(voice_key, speaker_id, speed, noise_scale, noise_scale_w):
-            audio = test_tts_voice(voice_key, speaker_id,
-                                   speed, noise_scale, noise_scale_w)
+            audio = test_tts_voice(voice_key, speaker_id, speed, noise_scale, noise_scale_w)
             return audio
 
-        voice_btn.change(
-            fn=on_voice_input,
-            inputs=[voice_btn, language_dropdown, region_dropdown],
-            outputs=[text_input, status_text]
-        )
-
-        send_btn.click(
+        user_input.submit(
             fn=on_send_message,
-            inputs=[text_input, state],
-            outputs=[chatbot, state, response_audio, text_input, status_text]
-        )
-
-        text_input.submit(
-            fn=on_send_message,
-            inputs=[text_input, state],
-            outputs=[chatbot, state, response_audio, text_input, status_text]
+            inputs=[user_input, state],
+            outputs=[chatbot, state, response_audio, user_input, status_text]
         )
 
         clear_btn.click(
@@ -426,11 +432,6 @@ def create_interface():
             outputs=[chatbot, state, response_audio]
         )
 
-        change_model_btn.click(
-            fn=on_model_change,
-            inputs=[asr_model_dropdown],
-            outputs=[status_text]
-        )
 
         change_llm_btn.click(
             fn=on_llm_model_change,
@@ -478,6 +479,12 @@ def create_interface():
                 tts_noise_scale_slider, tts_noise_scale_w_slider
             ],
             outputs=[test_audio]
+        )
+
+        demo.load(
+            fn=on_language_change,
+            inputs=[language_dropdown],
+            outputs=[region_dropdown, status_text]
         )
 
     return demo

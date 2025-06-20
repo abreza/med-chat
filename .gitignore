@@ -3,3 +3,4 @@ venv
 **/__pycache__
 data/*
 !data/piper/voices.json
+lib/medchatinput/data/*

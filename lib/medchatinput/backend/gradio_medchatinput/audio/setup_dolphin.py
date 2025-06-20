@@ -2,8 +2,7 @@ import os
 import urllib.request
 import shutil
 import dolphin
-from src.config.base_settings import ASR_MODEL_DIR, DOLPHIN_ASSETS_DIR
-from src.config.asr_settings import ASR_MODEL_URLS, ASR_ASSET_URLS
+from .config import ASR_MODEL_DIR, DOLPHIN_ASSETS_DIR, ASR_MODEL_URLS, ASR_ASSET_URLS
 
 dolphin_model = None
 current_dolphin_model_key = "small"
@@ -59,7 +58,3 @@ def setup_dolphin_model(model_key="small"):
 
 def get_dolphin_model():
     return dolphin_model
-
-
-def get_current_dolphin_model_key():
-    return current_dolphin_model_key

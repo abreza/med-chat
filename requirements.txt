@@ -7,3 +7,4 @@ python-dotenv==1.1.0
 onnxruntime==1.22.0
 gdown==5.2.0
 # after install this file: pip install --no-deps -r piper-req.txt
+# pip install -e lib/medchatinput/

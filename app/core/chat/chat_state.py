@@ -1,29 +1,43 @@
 import time
 import base64
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
-class VoiceChatState:
+class ChatState:
     def __init__(self):
-        self.conversation = []
+        self.messages: List[Dict[str, Any]] = []
         self.is_recording = False
         self.audio_buffer = []
         self.last_activity = time.time()
-        self.response_audio = None
+        self.current_audio = None
 
-    def add_message(self, role: str, content: str, images: Optional[List[str]] = None):
+    def add_user_message(self, content: str, images: Optional[List[str]] = None) -> None:
         message = {
-            "role": role,
-            "content": content
+            "role": "user",
+            "content": content,
+            "timestamp": time.time()
         }
+        
         if images:
             message["images"] = images
-        self.conversation.append(message)
+            
+        self.messages.append(message)
+        self._update_activity()
 
-    def get_conversation_display(self):
-        formatted_messages = []
+    def add_assistant_message(self, content: str) -> None:
+        message = {
+            "role": "assistant", 
+            "content": content,
+            "timestamp": time.time()
+        }
         
-        for msg in self.conversation:
+        self.messages.append(message)
+        self._update_activity()
+
+    def get_display_messages(self) -> List[Dict[str, Any]]:
+        display_messages = []
+        
+        for msg in self.messages:
             if msg["role"] == "user":
                 content = msg["content"] or ""
                 images = msg.get("images", [])
@@ -31,43 +45,31 @@ class VoiceChatState:
                 if images:
                     for img_path in images:
                         try:
-                            if hasattr(img_path, 'name'):
-                                file_path = img_path.name
-                            else:
-                                file_path = str(img_path)
-                            
-                            formatted_messages.append({
-                                "role": "user", 
+                            file_path = self._get_file_path(img_path)
+                            display_messages.append({
+                                "role": "user",
                                 "content": (file_path,)
                             })
                         except Exception as e:
                             print(f"Error processing image {img_path}: {e}")
-                    
-                    if content.strip():
-                        formatted_messages.append({
-                            "role": "user",
-                            "content": content
-                        })
-                else:
-                    formatted_messages.append({
+                
+                if content.strip():
+                    display_messages.append({
                         "role": "user",
                         "content": content
                     })
             else:
-                formatted_messages.append({
-                    "role": "assistant",
+                display_messages.append({
+                    "role": "assistant", 
                     "content": msg["content"]
                 })
         
-        return formatted_messages
+        return display_messages
 
-    def clear_conversation(self):
-        self.conversation = []
-
-    def get_messages_for_api(self):
+    def get_api_messages(self) -> List[Dict[str, Any]]:
         formatted_messages = []
         
-        for msg in self.conversation:
+        for msg in self.messages:
             if msg["role"] == "user" and msg.get("images"):
                 content_parts = []
                 
@@ -79,7 +81,7 @@ class VoiceChatState:
                 
                 for img_path in msg["images"]:
                     try:
-                        base64_image = self._encode_image(img_path)
+                        base64_image = self._encode_image_to_base64(img_path)
                         content_parts.append({
                             "type": "image_url",
                             "image_url": {
@@ -101,11 +103,27 @@ class VoiceChatState:
         
         return formatted_messages
 
-    def _encode_image(self, image_path: str) -> str:
-        if hasattr(image_path, 'name'):
-            file_path = image_path.name
-        else:
-            file_path = str(image_path)
-            
+    def clear_conversation(self) -> None:
+        self.messages.clear()
+        self.current_audio = None
+        self._update_activity()
+
+    def get_latest_assistant_message(self) -> Optional[str]:
+        for msg in reversed(self.messages):
+            if msg["role"] == "assistant":
+                return msg["content"]
+        return None
+
+    def _update_activity(self) -> None:
+        self.last_activity = time.time()
+
+    def _get_file_path(self, file_path: Any) -> str:
+        if hasattr(file_path, 'name'):
+            return file_path.name
+        return str(file_path)
+
+    def _encode_image_to_base64(self, image_path: Any) -> str:
+        file_path = self._get_file_path(image_path)
+        
         with open(file_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')

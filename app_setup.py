@@ -1,12 +1,16 @@
 from gradio_medchatinput import MedChatInput
 from app.ui.components.chat_interface import create_chat_interface, setup_transcription_events
 from app.ui.components.settings_panel import create_settings_panel
-from app.ui.components.file_manager.file_manager import create_file_manager, file_manager_js
+from app.ui.components.file_manager.file_manager import create_file_manager, get_file_manager_js
+from app.ui.components.interaction_panel import create_interaction_panel
 from app.ui.handlers.chat_handlers import ChatHandlers
 from app.ui.handlers.audio_handlers import AudioHandlers
 from app.ui.handlers.settings_handlers import SettingsHandlers
 from app.ui.handlers.file_manager_handlers import FileManagerHandlers
+from app.ui.handlers.interaction_handlers import InteractionHandlers
 from app.core.audio.speech_recognition.asr_config import get_language_options
+from app.utils.static import assets
+import gradio as gr
 
 
 class AppSetup:
@@ -16,12 +20,15 @@ class AppSetup:
         self.settings_handlers = SettingsHandlers(
             self.audio_handlers, self.chat_handlers.llm_client)
         self.file_manager_handlers = FileManagerHandlers()
+        self.interaction_handlers = InteractionHandlers()
 
         self.asr_language_options = get_language_options()
         self.voice_options, self.tts_language_options, self.default_voice = self.settings_handlers.get_initial_options()
 
-        self.js = "function(){" + MedChatInput.get_transcription_js() + \
-            file_manager_js + "}"
+        med_chat_js = MedChatInput.get_transcription_js()
+        file_manager_js = get_file_manager_js()
+
+        self.js = f"function(){{{med_chat_js}{file_manager_js}}}"
 
     def create_sidebar_components(self):
         file_manager_components = create_file_manager()
@@ -38,18 +45,27 @@ class AppSetup:
         setup_transcription_events(chat_components)
         return chat_components
 
+    def create_interaction_components(self):
+        interaction_components = create_interaction_panel()
+        return interaction_components
+
     def get_handlers(self):
         return {
             'audio_handlers': self.audio_handlers,
             'chat_handlers': self.chat_handlers,
             'settings_handlers': self.settings_handlers,
-            'file_manager_handlers': self.file_manager_handlers
+            'file_manager_handlers': self.file_manager_handlers,
+            'interaction_handlers': self.interaction_handlers
         }
 
     def get_js(self):
         return self.js
 
-    def setup_event_handlers(self, file_manager_components, settings_components, chat_components, conversation_state, tts_trigger):
+    def get_css(self):
+        """Load all CSS files for the application"""
+        return assets.load_css("main.css")
+
+    def setup_event_handlers(self, file_manager_components, settings_components, chat_components, interaction_components, conversation_state, tts_trigger):
         def handle_message_step2(ai_message, conversation_history):
             if ai_message and ai_message.strip():
                 return self.audio_handlers.generate_speech_audio("", ai_message)
@@ -94,6 +110,16 @@ class AppSetup:
                 file_manager_components["file_manager_state"],
                 file_manager_components["selected_files_state"],
                 file_manager_components["file_list"]
+            ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
             ]
         )
 
@@ -168,6 +194,16 @@ class AppSetup:
                 file_manager_components["file_list"],
                 file_manager_components["file_upload"]
             ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
+            ]
         )
 
         file_manager_components["select_all_btn"].click(
@@ -177,6 +213,16 @@ class AppSetup:
                 file_manager_components["selected_files_state"],
                 file_manager_components["file_list"],
             ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
+            ]
         )
 
         file_manager_components["deselect_all_btn"].click(
@@ -185,6 +231,16 @@ class AppSetup:
             outputs=[
                 file_manager_components["selected_files_state"],
                 file_manager_components["file_list"],
+            ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
             ]
         )
 
@@ -198,6 +254,16 @@ class AppSetup:
                 file_manager_components["file_manager_state"],
                 file_manager_components["selected_files_state"],
                 file_manager_components["file_list"],
+            ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
             ]
         )
 
@@ -213,4 +279,27 @@ class AppSetup:
                 file_manager_components["selected_files_state"],
                 file_manager_components["file_list"]
             ]
+        ).then(
+            fn=self.interaction_handlers.handle_file_selection_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["file_preview"],
+                interaction_components["explain_btn"]
+            ]
+        )
+
+        interaction_components["explain_btn"].click(
+            fn=self.interaction_handlers.handle_explain_request,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[interaction_components["explain_result"]]
+        ).then(
+            fn=lambda: gr.update(visible=True),
+            inputs=[],
+            outputs=[interaction_components["explain_result"]]
         )

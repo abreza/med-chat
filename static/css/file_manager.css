@@ -1,0 +1,239 @@
+.file-manager-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  background: white;
+}
+
+.file-stats {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 4px solid #3b82f6;
+  background: #f9fafb;
+  color: #374151;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-count {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.file-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  padding: 10px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.file-item.selected {
+  border-left: 4px solid #3b82f6;
+  background: #f9fafb;
+}
+
+.file-item:hover {
+  background: #f9fafb;
+}
+
+.file-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.file-item-main {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.file-item-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-grow: 1;
+  color: #374151;
+}
+
+.file-checkbox {
+  margin-right: 8px;
+  transform: scale(1.2);
+  accent-color: #3b82f6;
+}
+
+.file-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.file-name {
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: #374151;
+}
+
+.file-meta {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.file-type {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.file-size {
+  color: #6b7280;
+}
+
+.file-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 10px;
+}
+
+.remove-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background-color 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: #b91c1c;
+}
+
+.empty-file-list {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  margin: 10px 0;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.empty-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dark .file-manager-container,
+[data-theme="dark"] .file-manager-container {
+  border-color: #4b5563;
+  background: #1f2937;
+}
+
+.dark .file-stats,
+[data-theme="dark"] .file-stats {
+  background: #374151;
+  color: #e5e7eb;
+  border-left-color: #60a5fa;
+}
+
+.dark .selected-count,
+[data-theme="dark"] .selected-count {
+  color: #9ca3af;
+}
+
+.dark .file-item,
+[data-theme="dark"] .file-item {
+  border-color: #4b5563;
+  background: #1f2937;
+}
+
+.dark .file-item.selected,
+[data-theme="dark"] .file-item.selected {
+  background: #374151;
+  border-left-color: #60a5fa;
+}
+
+.dark .file-item:hover,
+[data-theme="dark"] .file-item:hover {
+  background: #374151;
+}
+
+.dark .file-item-label,
+[data-theme="dark"] .file-item-label,
+.dark .file-name,
+[data-theme="dark"] .file-name {
+  color: #e5e7eb;
+}
+
+.dark .file-meta,
+[data-theme="dark"] .file-meta,
+.dark .file-size,
+[data-theme="dark"] .file-size {
+  color: #9ca3af;
+}
+
+.dark .file-checkbox,
+[data-theme="dark"] .file-checkbox {
+  accent-color: #60a5fa;
+}
+
+.dark .remove-btn,
+[data-theme="dark"] .remove-btn {
+  background: #dc2626;
+}
+
+.dark .remove-btn:hover,
+[data-theme="dark"] .remove-btn:hover {
+  background: #b91c1c;
+}
+
+.dark .empty-file-list,
+[data-theme="dark"] .empty-file-list {
+  background: #374151;
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark .empty-title,
+[data-theme="dark"] .empty-title {
+  color: #e5e7eb;
+}
+
+.dark .empty-subtitle,
+[data-theme="dark"] .empty-subtitle {
+  color: #9ca3af;
+}
+
+.dark .file-type[style*="10b981"],
+[data-theme="dark"] .file-type[style*="10b981"] {
+  color: #34d399 !important;
+}
+
+.dark .file-type[style*="3b82f6"],
+[data-theme="dark"] .file-type[style*="3b82f6"] {
+  color: #60a5fa !important;
+}
+
+.dark .file-type[style*="6b7280"],
+[data-theme="dark"] .file-type[style*="6b7280"] {
+  color: #9ca3af !important;
+}

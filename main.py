@@ -1,9 +1,17 @@
 import gradio as gr
 from app_setup import AppSetup
+from app.themes.medical_theme import MedicalTheme
 
 app_setup = AppSetup()
 
-with gr.Blocks(title="Medical AI Assistant", theme=gr.themes.Soft(), js=app_setup.get_js()) as demo:
+medical_theme = MedicalTheme()
+
+with gr.Blocks(
+    title="Medical AI Assistant",
+    theme=medical_theme,
+    js=app_setup.get_js(),
+    css=app_setup.get_css()
+) as demo:
     conversation_state = gr.State(value=[])
     tts_trigger = gr.State(value="")
 
@@ -14,8 +22,11 @@ with gr.Blocks(title="Medical AI Assistant", theme=gr.themes.Soft(), js=app_setu
         with gr.Column(scale=4):
             chat_components = app_setup.create_chat_components()
 
+        with gr.Column(scale=2):
+            interaction_components = app_setup.create_interaction_components()
+
     app_setup.setup_event_handlers(
-        file_manager_components, settings_components, chat_components,
+        file_manager_components, settings_components, chat_components, interaction_components,
         conversation_state, tts_trigger
     )
 

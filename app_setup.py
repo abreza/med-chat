@@ -20,7 +20,8 @@ class AppSetup:
         self.settings_handlers = SettingsHandlers(
             self.audio_handlers, self.chat_handlers.llm_client)
         self.file_manager_handlers = FileManagerHandlers()
-        self.interaction_handlers = InteractionHandlers()
+        self.interaction_handlers = InteractionHandlers(
+            self.chat_handlers.llm_client)
 
         self.asr_language_options = get_language_options()
         self.voice_options, self.tts_language_options, self.default_voice = self.settings_handlers.get_initial_options()
@@ -119,7 +120,8 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
@@ -202,7 +204,8 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
@@ -221,7 +224,8 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
@@ -240,7 +244,8 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
@@ -263,7 +268,8 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
@@ -287,19 +293,59 @@ class AppSetup:
             ],
             outputs=[
                 interaction_components["file_preview"],
-                interaction_components["explain_btn"]
+                interaction_components["explain_btn"],
+                interaction_components["ocr_btn"]
             ]
         )
 
         interaction_components["explain_btn"].click(
+            fn=self.interaction_handlers.handle_explain_start,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["explain_result"],
+                interaction_components["explain_btn"]
+            ]
+        ).then(
+            fn=lambda: gr.update(visible=True),
+            inputs=[],
+            outputs=[interaction_components["explain_result"]]
+        ).then(
             fn=self.interaction_handlers.handle_explain_request,
             inputs=[
                 file_manager_components["file_manager_state"],
                 file_manager_components["selected_files_state"]
             ],
-            outputs=[interaction_components["explain_result"]]
+            outputs=[
+                interaction_components["explain_result"],
+                interaction_components["explain_btn"]
+            ]
+        )
+
+        interaction_components["ocr_btn"].click(
+            fn=self.interaction_handlers.handle_ocr_start,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["ocr_result"],
+                interaction_components["ocr_btn"]
+            ]
         ).then(
             fn=lambda: gr.update(visible=True),
             inputs=[],
-            outputs=[interaction_components["explain_result"]]
+            outputs=[interaction_components["ocr_result"]]
+        ).then(
+            fn=self.interaction_handlers.handle_ocr_request,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"]
+            ],
+            outputs=[
+                interaction_components["ocr_result"],
+                interaction_components["ocr_btn"]
+            ]
         )

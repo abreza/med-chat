@@ -24,16 +24,33 @@ def create_interaction_panel() -> Dict[str, Any]:
                 interactive=False
             )
 
+            ocr_btn = gr.Button(
+                "📝 Extract Text (OCR)",
+                variant="secondary",
+                scale=1,
+                size="sm",
+                interactive=False,
+                visible=False
+            )
+
         explain_result = gr.HTML(
             value="",
             visible=False,
             elem_id="explain_result"
         )
 
+        ocr_result = gr.HTML(
+            value="",
+            visible=False,
+            elem_id="ocr_result"
+        )
+
     return {
         "file_preview": file_preview,
         "explain_btn": explain_btn,
-        "explain_result": explain_result
+        "ocr_btn": ocr_btn,
+        "explain_result": explain_result,
+        "ocr_result": ocr_result
     }
 
 
@@ -280,4 +297,4 @@ def get_preview_type_color(file_type: str) -> str:
 
 
 def get_preview_css() -> str:
-    return assets.load_css("interaction_panel.css")
+    return assets.load_multiple_css("interaction_panel.css", "explain_result.css")

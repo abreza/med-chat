@@ -4,12 +4,8 @@ from typing import Dict, Any
 
 
 def create_chat_interface(default_language: str = "fa", default_region: str = None) -> Dict[str, Any]:
-    chatbot = gr.Chatbot(
-        label="💬 Conversation",
-        height=400,
-        show_copy_button=True,
-        type="messages"
-    )
+    chatbot = gr.Chatbot(label="💬 Conversation", height=400,
+                         show_copy_button=True, type="messages")
 
     user_input = MedChatInput(
         label="Your message",
@@ -28,37 +24,17 @@ def create_chat_interface(default_language: str = "fa", default_region: str = No
     )
 
     transcription_trigger = gr.Textbox(
-        visible=False, elem_id="transcription_trigger"
-    )
+        visible=False, elem_id="transcription_trigger")
     transcription_result = gr.Textbox(
-        visible=False, elem_id="transcription_result"
-    )
-
-    clear_btn = gr.Button(
-        "Clear Chat", variant="secondary", scale=1
-    )
-
-    response_audio = gr.Audio(
-        label="🔊 AI Response",
-        autoplay=True,
-        visible=True
-    )
-
-    status_text = gr.Textbox(
-        label="📊 Status",
-        value="Ready",
-        interactive=False,
-        lines=5
-    )
+        visible=False, elem_id="transcription_result")
+    clear_btn = gr.Button("Clear Chat", variant="secondary", scale=1)
+    response_audio = gr.Audio(label="🔊 AI Response",
+                              autoplay=True, visible=True)
 
     return {
-        "chatbot": chatbot,
-        "user_input": user_input,
-        "transcription_trigger": transcription_trigger,
-        "transcription_result": transcription_result,
-        "clear_btn": clear_btn,
+        "chatbot": chatbot, "user_input": user_input, "transcription_trigger": transcription_trigger,
+        "transcription_result": transcription_result, "clear_btn": clear_btn,
         "response_audio": response_audio,
-        "status_text": status_text,
     }
 
 

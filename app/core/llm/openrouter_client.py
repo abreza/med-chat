@@ -1,31 +1,27 @@
 from openai import OpenAI
 from typing import List, Dict, Any
 from ..config.settings import Config
+from ...utils.error import handle_api_error
 
 
 class OpenRouterClient:
     def __init__(self):
-        self.client = OpenAI(
-            base_url=Config.OPENROUTER_BASE_URL,
-            api_key=Config.OPENROUTER_API_KEY,
-        )
+        self.client = OpenAI(base_url=Config.OPENROUTER_BASE_URL,
+                             api_key=Config.OPENROUTER_API_KEY)
         self.current_model = Config.DEFAULT_MODEL
-        
+
     def generate_response(self, messages: List[Dict[str, Any]]) -> str:
         try:
             response = self.client.chat.completions.create(
                 model=self.current_model,
                 messages=[self._get_system_message()] + messages,
             )
-
             return response.choices[0].message.content
-
         except Exception as e:
-            return self._handle_api_error(e)
+            return handle_api_error(e)
 
     def set_model(self, model_name: str) -> bool:
         from .model_manager import ModelManager
-        
         if ModelManager.is_valid_model(model_name):
             self.current_model = model_name
             return True
@@ -53,16 +49,3 @@ Response Guidelines:
 - When analyzing images, provide general observations but always recommend consulting with healthcare professionals for definitive diagnosis
 - For medical images, describe what you can observe but emphasize the importance of professional medical interpretation"""
         }
-
-    def _handle_api_error(self, error: Exception) -> str:
-        error_str = str(error).lower()
-        
-        if "insufficient_quota" in error_str:
-            return "عذر می‌خواهم، در حال حاضر امکان پاسخ‌گویی وجود ندارد. لطفا بعدا دوباره تلاش کنید."
-        elif "rate_limit" in error_str:
-            return "به دلیل محدودیت نرخ درخواست، لطفا کمی صبر کنید و دوباره تلاش کنید."
-        elif "vision" in error_str:
-            return "مدل انتخاب شده از تصاویر پشتیبانی نمی‌کند. لطفا مدلی با قابلیت بینایی انتخاب کنید."
-        else:
-            print(f"OpenRouter API error: {error}")
-            return "خطایی در سیستم رخ داده است. لطفا دوباره تلاش کنید."

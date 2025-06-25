@@ -12,21 +12,14 @@ def get_language_options() -> List[Tuple[str, str]]:
         language_options.sort(key=lambda x: x[0])
         return [("Auto-detect", None)] + language_options
     except ImportError:
-        return [
-            ("Auto-detect", None),
-            ("fa: Persian", "fa"),
-            ("en: English", "en"),
-            ("ar: Arabic", "ar"),
-        ]
+        return [("Auto-detect", None), ("fa: Persian", "fa"), ("en: English", "en"), ("ar: Arabic", "ar")]
 
 
 def get_region_options(language: str) -> Tuple[List[Tuple[str, str]], str, bool]:
     if not language:
         return [], None, False
-
     try:
         from dolphin.languages import LANGUAGE_REGION_CODES
-
         language_to_regions = {}
         for lang_region, names in LANGUAGE_REGION_CODES.items():
             if "-" in lang_region:
@@ -43,16 +36,10 @@ def get_region_options(language: str) -> Tuple[List[Tuple[str, str]], str, bool]
             return regions, default_value, True
     except ImportError:
         pass
-
     return [], None, False
 
 
-def update_language_config(language: str, region: str) -> str:
+def update_language_config(language: str, region: str) -> None:
     global current_language, current_region
-
     current_language = language
     current_region = region
-
-    lang_info = "Auto-detect" if not language else language
-    region_info = f" ({region})" if region else ""
-    return f"Language set to: {lang_info}{region_info}"

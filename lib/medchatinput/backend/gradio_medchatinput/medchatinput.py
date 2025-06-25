@@ -62,9 +62,8 @@ class MedChatInput(FormComponent):
     ]
     
     @staticmethod
-    def get_immediate_transcription_js(transcription_trigger_id: str="transcription_trigger", transcription_result_id: str="transcription_result") -> str:
+    def get_transcription_js(transcription_trigger_id: str="transcription_trigger", transcription_result_id: str="transcription_result") -> str:
         return """
-function() {
     console.log("Setting up immediate transcription...");
     
     // Set up global transcription function
@@ -108,7 +107,6 @@ function() {
     };
     
     console.log("Immediate transcription setup complete");
-}
 """
 
     def __init__(

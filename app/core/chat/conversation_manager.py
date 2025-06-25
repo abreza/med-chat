@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from .chat_state import ChatState
 from ..llm.openrouter_client import OpenRouterClient
+from ...utils.error import get_default_error_message
 
 
 class ConversationManager:
@@ -18,9 +19,7 @@ class ConversationManager:
             self.chat_state.add_assistant_message(ai_response)
             return ai_response, True
         except Exception as e:
-            error_msg = f"Error processing message: {e}"
-            print(error_msg)
-            return "عذر می‌خواهم، خطایی رخ داده است. لطفا دوباره تلاش کنید.", False
+            return get_default_error_message(), False
 
     def get_conversation_display(self) -> List[Dict[str, Any]]:
         return self.chat_state.get_display_messages()

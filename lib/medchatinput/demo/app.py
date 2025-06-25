@@ -25,7 +25,7 @@ def process_input(user_input):
 
 
 if __name__ == "__main__":
-    with gr.Blocks(title="Medical Chat with Voice Input", js=MedChatInput.get_immediate_transcription_js()) as demo:
+    with gr.Blocks(title="Medical Chat with Voice Input", js=MedChatInput.get_transcription_js()) as demo:
         chatbot = gr.Chatbot(label="Conversation")
         
         user_input = MedChatInput(

@@ -8,7 +8,11 @@ def generate_file_item_html(file_info: Dict[str, Any], file_id: str, is_selected
 
     icon = get_file_icon(file_type)
     type_color = get_file_type_color(file_type)
-    selection_style = "border-left: 4px solid #2196f3;" if is_selected else ""
+
+    if is_selected:
+            selection_style = "border-left: 4px solid #6c757d;"
+    else:
+        selection_style = ""
 
     action_buttons = f"""
         <button onclick="removeFile('{file_id}')" 
@@ -71,7 +75,7 @@ def generate_empty_file_list_html() -> str:
     return """
     <div style="padding: 20px; text-align: center; color: #666; margin: 10px 0; border-top: 1px solid #e1e5e9;">
         <p style="margin: 0; font-size: 14px;">📁 No files uploaded</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px;">Upload images or text files to get started</p>
+        <p style="margin: 5px 0 0 0; font-size: 12px;">Upload images or text files</p>
     </div>
     """
 
@@ -87,8 +91,7 @@ def generate_file_list_html(files_data: Dict[str, Any], selected_files: List[str
 
     for file_id, file_info in files_data.items():
         is_selected = file_id in selected_files
-        html_parts.append(generate_file_item_html(
-            file_info, file_id, is_selected))
+        html_parts.append(generate_file_item_html(file_info, file_id, is_selected))
 
     html_parts.append("</div>")
     return "".join(html_parts)

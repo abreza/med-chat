@@ -1,6 +1,10 @@
-import gradio as gr
-from app_setup import AppSetup
 from app.themes.medical_theme import MedicalTheme
+from app_setup import AppSetup
+import os
+import gradio as gr
+
+os.environ['MODELS_DATA_DIR'] = os.path.dirname(os.path.abspath(__file__))
+
 
 app_setup = AppSetup()
 

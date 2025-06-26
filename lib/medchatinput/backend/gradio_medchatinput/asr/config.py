@@ -2,7 +2,7 @@ from dolphin.languages import LANGUAGE_CODES, LANGUAGE_REGION_CODES
 
 import os
 
-DATA_DIR = os.path.join(os.getcwd(), "data")
+DATA_DIR = os.path.join(os.environ.get('MODELS_DATA_DIR', os.getcwd()), "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 ASR_MODEL_DIR = os.path.join(DATA_DIR, "dolphin/models")

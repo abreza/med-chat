@@ -1,6 +1,9 @@
 services:
   medical-ai-assistant:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
     ports:
       - "7860:7860"
     env_file:

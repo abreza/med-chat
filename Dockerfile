@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG NODE_VERSION=18.20.2
 RUN set -eux; \
     ARCH="$(dpkg --print-architecture)"; \
-
     if [ "$ARCH" = "amd64" ]; then ARCH="x64"; fi; \
     if [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi; \
     curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" -o node.tar.xz; \
@@ -22,9 +21,8 @@ RUN set -eux; \
 
 WORKDIR /app
 
-COPY requirements.txt piper-req.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir --no-deps -r piper-req.txt
+COPY medchatinput-req.txt ./
+RUN pip install --no-cache-dir -r medchatinput-req.txt
 
 COPY lib/medchatinput/ ./lib/medchatinput/
 WORKDIR /app/lib/medchatinput
@@ -32,6 +30,7 @@ RUN gradio cc install && gradio cc build
 
 WORKDIR /app
 
+RUN pip install --no-cache-dir gdown==5.2.0
 COPY download_files.sh ./
 RUN chmod +x download_files.sh && ./download_files.sh
 
@@ -66,6 +65,8 @@ COPY . .
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 USER appuser
+
+COPY --from=builder /root/nltk_data /home/appuser/nltk_data
 
 EXPOSE 7860
 

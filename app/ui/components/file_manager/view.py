@@ -6,9 +6,14 @@ def generate_file_item_html(file_info: Dict[str, Any], file_id: str, is_selected
     file_type = file_info.get('type', 'unknown')
     file_name = file_info.get('name', 'Unknown')
     file_size = file_info.get('size', '0 B')
+    subtype = file_info.get('subtype', '')
 
-    icon = get_file_icon(file_type)
+    icon = get_file_icon(file_type, subtype)
     type_color = get_file_type_color(file_type)
+
+    display_type = file_type.upper()
+    if file_type == 'medical' and subtype:
+        display_type = subtype.upper()
 
     selection_class = "selected" if is_selected else ""
 
@@ -26,7 +31,7 @@ def generate_file_item_html(file_info: Dict[str, Any], file_id: str, is_selected
                     <div class="file-info">
                         <div class="file-name">{file_name}</div>
                         <div class="file-meta">
-                            <span class="file-type" style="color: {type_color};">{file_type.upper()}</span> 
+                            <span class="file-type" style="color: {type_color};">{display_type}</span> 
                             <span class="file-size">{file_size}</span>
                         </div>
                     </div>
@@ -51,7 +56,15 @@ def generate_file_stats_html(file_count: int, selected_count: int) -> str:
     """
 
 
-def get_file_icon(file_type: str) -> str:
+def get_file_icon(file_type: str, subtype: str = '') -> str:
+    if file_type == 'medical':
+        if subtype == 'dicom':
+            return '🏥'
+        elif subtype == 'nifti':
+            return '🧠'
+        else:
+            return '⚕️'
+
     icons = {
         'image': '🖼️',
         'text': '📄',
@@ -64,17 +77,20 @@ def get_file_type_color(file_type: str) -> str:
     colors = {
         'image': '#10b981',
         'text': '#3b82f6',
+        'medical': '#e11d48',
         'unknown': '#6b7280'
     }
     return colors.get(file_type, '#6b7280')
 
 
 def generate_empty_file_list_html() -> str:
-    return """
+    css = assets.load_css("file_manager.css")
+    return f"""
+    {css}
     <div class="empty-file-list">
         <div class="empty-icon">📁</div>
         <p class="empty-title">No files uploaded</p>
-        <p class="empty-subtitle">Upload images or text files</p>
+        <p class="empty-subtitle">Upload images, text, or medical files (DICOM/NIfTI)</p>
     </div>
     """
 
@@ -83,8 +99,11 @@ def generate_file_list_html(files_data: Dict[str, Any], selected_files: List[str
     if not files_data:
         return generate_empty_file_list_html()
 
-    html_parts = [get_file_manager_css(),
-                  '<div id="file-manager-container" class="file-manager-container">']
+    css = assets.load_css("file_manager.css")
+    html_parts = [
+        css,
+        '<div id="file-manager-container" class="file-manager-container">'
+    ]
 
     html_parts.append(generate_file_stats_html(
         len(files_data), len(selected_files)))
@@ -96,7 +115,3 @@ def generate_file_list_html(files_data: Dict[str, Any], selected_files: List[str
 
     html_parts.append("</div>")
     return "".join(html_parts)
-
-
-def get_file_manager_css() -> str:
-    return assets.load_css("file_manager.css")

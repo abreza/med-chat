@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 
 def group_files_by_type(files_data: Dict[str, Any]) -> Dict[str, List]:
@@ -50,20 +50,42 @@ def sort_voices_by_quality(voices: List[tuple]) -> List[tuple]:
     return sorted(voices, key=lambda x: x[0])
 
 
-def extract_selected_files_for_llm(files_data: Dict[str, Any], selected_files: List[str]) -> tuple[List, List[str]]:
+def extract_selected_files_for_llm(files_data: Dict[str, Any], selected_files: List[str]) -> Tuple[List, List[str]]:
     image_files = []
     text_contents = []
+    medical_file_references = []
 
     for file_id in selected_files:
         if file_id not in files_data:
             continue
 
         file_info = files_data[file_id]
-        if file_info['type'] == 'image':
+        file_type = file_info.get('type', 'unknown')
+        file_name = file_info.get('name', 'Unknown')
+
+        if file_type == 'image':
             image_files.append(type('File', (), {'name': file_info['path']})())
-        elif file_info['type'] == 'text':
+        elif file_type == 'text':
             content = file_info.get('content', '')
             if content:
-                text_contents.append(f"File: {file_info['name']}\n{content}\n")
+                text_contents.append(f"File: {file_name}\n{content}\n")
+        elif file_type == 'medical':
+            subtype = file_info.get('subtype', 'unknown')
+            file_size = file_info.get('size', '0 B')
+            medical_file_references.append({
+                'name': file_name,
+                'type': subtype.upper() if subtype else 'MEDICAL',
+                'size': file_size
+            })
+
+    if medical_file_references:
+        medical_text = "=== MEDICAL FILES REFERENCE ===\n"
+        medical_text += "Note: The following medical files are available but their binary content is not included in this analysis:\n\n"
+
+        for med_file in medical_file_references:
+            medical_text += f"- {med_file['name']} ({med_file['type']}, {med_file['size']})\n"
+
+        medical_text += "\nFor detailed medical file analysis, please use specialized medical imaging tools.\n\n"
+        text_contents.append(medical_text)
 
     return image_files, text_contents

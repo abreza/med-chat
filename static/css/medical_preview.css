@@ -1,0 +1,250 @@
+.medical-file-preview {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px 0;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-preview-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.file-preview-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.file-preview-info {
+  flex-grow: 1;
+}
+
+.file-preview-name {
+  margin: 0 0 4px 0;
+  color: #374151;
+  font-size: 16px;
+}
+
+.file-preview-meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.file-preview-type {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.file-preview-size {
+  color: #6b7280;
+}
+
+.medical-info {
+  margin: 16px 0;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #e74c3c;
+}
+
+.medical-info-row {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.medical-info-row strong {
+  color: #1f2937;
+  margin-right: 8px;
+}
+
+.medical-image-preview {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.medical-image-header {
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.medical-image-container {
+  max-height: 400px;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  background: #000;
+}
+
+.medical-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  display: block;
+}
+
+.medical-image-controls {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.medical-controls-hint {
+  font-style: italic;
+}
+
+.medical-image-fallback {
+  text-align: center;
+  padding: 40px 20px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.medical-fallback-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.medical-fallback-text {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.medical-fallback-small {
+  color: #6b7280;
+  opacity: 0.7;
+}
+
+.medical-error-preview {
+  padding: 40px 20px;
+  text-align: center;
+  border: 2px dashed #ef4444;
+  border-radius: 12px;
+  margin: 10px 0;
+  background: #fef2f2;
+  color: #374151;
+}
+
+.medical-error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.medical-error-title {
+  margin: 0 0 8px 0;
+  color: #dc2626;
+  font-size: 18px;
+}
+
+.medical-error-message {
+  margin: 0;
+  font-size: 14px;
+  color: #7f1d1d;
+}
+
+.dark .medical-file-preview,
+[data-theme="dark"] .medical-file-preview {
+  border-color: #4b5563;
+  background: #1f2937;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark .file-preview-name,
+[data-theme="dark"] .file-preview-name {
+  color: #e5e7eb;
+}
+
+.dark .file-preview-meta,
+[data-theme="dark"] .file-preview-meta,
+.dark .file-preview-size,
+[data-theme="dark"] .file-preview-size {
+  color: #9ca3af;
+}
+
+.dark .medical-info,
+[data-theme="dark"] .medical-info {
+  background: #374151;
+  border-left-color: #ef4444;
+}
+
+.dark .medical-info-row,
+[data-theme="dark"] .medical-info-row {
+  color: #e5e7eb;
+}
+
+.dark .medical-info-row strong,
+[data-theme="dark"] .medical-info-row strong {
+  color: #f9fafb;
+}
+
+.dark .medical-image-header,
+[data-theme="dark"] .medical-image-header {
+  color: #9ca3af;
+}
+
+.dark .medical-image-controls,
+[data-theme="dark"] .medical-image-controls,
+.dark .medical-controls-hint,
+[data-theme="dark"] .medical-controls-hint {
+  color: #9ca3af;
+}
+
+.dark .medical-image-fallback,
+[data-theme="dark"] .medical-image-fallback {
+  border-color: #4b5563;
+  background: #374151;
+}
+
+.dark .medical-fallback-text,
+[data-theme="dark"] .medical-fallback-text,
+.dark .medical-fallback-small,
+[data-theme="dark"] .medical-fallback-small {
+  color: #9ca3af;
+}
+
+.dark .medical-error-preview,
+[data-theme="dark"] .medical-error-preview {
+  border-color: #ef4444;
+  background: #2d1b1b;
+  color: #e5e7eb;
+}
+
+.dark .medical-error-title,
+[data-theme="dark"] .medical-error-title {
+  color: #ef5350;
+}
+
+.dark .medical-error-message,
+[data-theme="dark"] .medical-error-message {
+  color: #ffcdd2;
+}
+
+.dark .file-preview-type[style*="10b981"],
+[data-theme="dark"] .file-preview-type[style*="10b981"] {
+  color: #34d399 !important;
+}
+
+.dark .file-preview-type[style*="3b82f6"],
+[data-theme="dark"] .file-preview-type[style*="3b82f6"] {
+  color: #60a5fa !important;
+}
+
+.dark .file-preview-type[style*="e11d48"],
+[data-theme="dark"] .file-preview-type[style*="e11d48"] {
+  color: #f87171 !important;
+}
+
+.dark .file-preview-type[style*="6b7280"],
+[data-theme="dark"] .file-preview-type[style*="6b7280"] {
+  color: #9ca3af !important;
+}

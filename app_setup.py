@@ -121,7 +121,8 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
         )
 
@@ -205,7 +206,8 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
         )
 
@@ -225,7 +227,8 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
         )
 
@@ -245,7 +248,8 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
         )
 
@@ -269,7 +273,8 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
         )
 
@@ -294,8 +299,42 @@ class AppSetup:
             outputs=[
                 interaction_components["file_preview"],
                 interaction_components["explain_btn"],
-                interaction_components["ocr_btn"]
+                interaction_components["ocr_btn"],
+                interaction_components["medical_controls"]
             ]
+        )
+
+        interaction_components["slice_slider"].change(
+            fn=self.interaction_handlers.handle_medical_slice_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"],
+                interaction_components["slice_slider"],
+                interaction_components["axis_dropdown"]
+            ],
+            outputs=[interaction_components["file_preview"]]
+        )
+
+        interaction_components["axis_dropdown"].change(
+            fn=self.interaction_handlers.handle_medical_slice_change,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"],
+                interaction_components["slice_slider"],
+                interaction_components["axis_dropdown"]
+            ],
+            outputs=[interaction_components["file_preview"]]
+        )
+
+        interaction_components["apply_windowing_btn"].click(
+            fn=self.interaction_handlers.handle_medical_windowing,
+            inputs=[
+                file_manager_components["file_manager_state"],
+                file_manager_components["selected_files_state"],
+                interaction_components["window_center"],
+                interaction_components["window_width"]
+            ],
+            outputs=[interaction_components["file_preview"]]
         )
 
         interaction_components["explain_btn"].click(

@@ -4,6 +4,7 @@ from ..components.interaction_panel import (
     generate_empty_preview_html,
     generate_single_file_preview_html,
     generate_multiple_files_preview_html,
+    generate_medical_file_preview_html,
     get_image_mime_type
 )
 from ...utils.data import extract_selected_files_for_llm
@@ -16,15 +17,16 @@ class InteractionHandlers:
     def __init__(self, llm_client: OpenRouterClient = None):
         self.llm_client = llm_client or OpenRouterClient()
 
-    def handle_file_selection_change(self, files_data: Dict[str, Any], selected_files: List[str]) -> Tuple[str, gr.update, gr.update]:
+    def handle_file_selection_change(self, files_data: Dict[str, Any], selected_files: List[str]) -> Tuple[str, gr.update, gr.update, gr.update]:
         explain_btn_update = gr.update(interactive=len(selected_files) > 0)
 
-        # Check if all selected files are images for OCR button
         all_images = self._are_all_files_images(files_data, selected_files)
         ocr_btn_update = gr.update(
             interactive=len(selected_files) > 0 and all_images,
             visible=all_images and len(selected_files) > 0
         )
+
+        medical_controls_update = gr.update(visible=False)
 
         if not selected_files:
             preview_html = generate_empty_preview_html()
@@ -32,14 +34,59 @@ class InteractionHandlers:
             file_id = selected_files[0]
             if file_id in files_data:
                 file_info = files_data[file_id]
-                preview_html = generate_single_file_preview_html(file_info)
+                file_type = file_info.get('type', 'unknown')
+
+                # Show medical controls if it's a medical file
+                if file_type == 'medical':
+                    medical_controls_update = gr.update(visible=True)
+                    preview_html = generate_medical_file_preview_html(
+                        file_info)
+                else:
+                    preview_html = generate_single_file_preview_html(file_info)
             else:
                 preview_html = generate_empty_preview_html()
         else:
             preview_html = generate_multiple_files_preview_html(
                 files_data, selected_files)
 
-        return preview_html, explain_btn_update, ocr_btn_update
+        return preview_html, explain_btn_update, ocr_btn_update, medical_controls_update
+
+    def handle_medical_slice_change(self, files_data: Dict[str, Any], selected_files: List[str], slice_value: int, axis: int) -> str:
+        if len(selected_files) != 1:
+            return generate_empty_preview_html()
+
+        file_id = selected_files[0]
+        if file_id not in files_data:
+            return generate_empty_preview_html()
+
+        file_info = files_data[file_id]
+        if file_info.get('type') != 'medical':
+            return generate_empty_preview_html()
+
+        updated_file_info = file_info.copy()
+        updated_file_info['slice_index'] = slice_value
+        updated_file_info['axis'] = axis
+
+        return generate_medical_file_preview_html(updated_file_info)
+
+    def handle_medical_windowing(self, files_data: Dict[str, Any], selected_files: List[str],
+                                 window_center: float, window_width: float) -> str:
+        if len(selected_files) != 1:
+            return generate_empty_preview_html()
+
+        file_id = selected_files[0]
+        if file_id not in files_data:
+            return generate_empty_preview_html()
+
+        file_info = files_data[file_id]
+        if file_info.get('type') != 'medical':
+            return generate_empty_preview_html()
+
+        updated_file_info = file_info.copy()
+        updated_file_info['window_center'] = window_center
+        updated_file_info['window_width'] = window_width
+
+        return generate_medical_file_preview_html(updated_file_info)
 
     def _are_all_files_images(self, files_data: Dict[str, Any], selected_files: List[str]) -> bool:
         if not selected_files:

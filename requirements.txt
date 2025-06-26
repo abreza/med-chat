@@ -2,10 +2,11 @@ torch==2.7.1
 numpy<1.24
 openai==1.86.0
 gradio==5.34.0
-torchaudio==2.7.1
-dataoceanai-dolphin==20250519
 python-dotenv==1.1.0
 onnxruntime==1.22.0
 gdown==5.2.0
+pydicom==3.0.1
+nibabel==5.3.2
 # after install this file: pip install --no-deps -r piper-req.txt
+# after install this file: pip install --no-deps -r medchatinput-req.txt
 # pip install -e lib/medchatinput/

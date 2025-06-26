@@ -22,3 +22,6 @@ DEFAULT_TTS_SETTINGS = {"speaker": 0, "speed": 1.0,
                         "noise_scale": 0.667, "noise_scale_w": 0.8}
 
 SUPPORTED_IMAGE_TYPES = ['.jpg', '.jpeg', '.png', '.webp']
+SUPPORTED_MEDICAL_TYPES = ['.dcm', '.dicom', '.nii', '.nii.gz']
+SUPPORTED_TEXT_TYPES = ['.txt', '.md', '.json', '.csv',
+                        '.py', '.js', '.html', '.css', '.xml', '.yaml', '.yml']

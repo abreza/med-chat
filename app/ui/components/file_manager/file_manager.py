@@ -1,5 +1,7 @@
 import gradio as gr
 from typing import Dict, Any
+
+from app.core.config.constants import SUPPORTED_MEDICAL_TYPES
 from .view import generate_file_list_html
 from app.utils.static import assets
 
@@ -7,8 +9,11 @@ from app.utils.static import assets
 def create_file_manager() -> Dict[str, Any]:
     with gr.Accordion("📁 File Manager (Context Files)", open=True):
         with gr.Column():
-            file_upload = gr.File(label="📤 Upload Files", file_count="multiple", file_types=[
-                                  "image", "text"], height=200)
+            file_upload = gr.File(
+                label="📤 Upload Files",
+                file_count="multiple",
+                height=200
+            )
             upload_btn = gr.Button(
                 "Upload", variant="primary", scale=1, size="sm")
 

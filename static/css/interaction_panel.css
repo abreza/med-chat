@@ -82,6 +82,8 @@
   color: #6b7280;
   margin-bottom: 8px;
   font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .content-preview-text {
@@ -109,6 +111,8 @@
   color: #6b7280;
   margin-bottom: 12px;
   font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .image-preview-container {
@@ -185,6 +189,8 @@
   color: #6b7280;
   margin-bottom: 8px;
   font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .thumbnails-container {
@@ -250,6 +256,7 @@
   font-size: 11px;
 }
 
+/* Dark mode styles */
 .dark .empty-preview,
 [data-theme="dark"] .empty-preview {
   border-color: #4b5563;
@@ -354,6 +361,7 @@
   color: #9ca3af;
 }
 
+/* File type color overrides for dark mode */
 .dark .file-preview-type[style*="10b981"],
 [data-theme="dark"] .file-preview-type[style*="10b981"] {
   color: #34d399 !important;
@@ -367,4 +375,48 @@
 .dark .file-preview-type[style*="6b7280"],
 [data-theme="dark"] .file-preview-type[style*="6b7280"] {
   color: #9ca3af !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .single-file-preview,
+  .multiple-files-preview {
+    padding: 15px;
+    margin: 8px 0;
+  }
+
+  .file-preview-header {
+    margin-bottom: 10px;
+  }
+
+  .file-preview-icon {
+    font-size: 20px;
+    margin-right: 10px;
+  }
+
+  .file-preview-name {
+    font-size: 14px;
+  }
+
+  .file-preview-meta {
+    font-size: 11px;
+  }
+
+  .content-preview,
+  .image-preview {
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .content-preview-text {
+    font-size: 12px;
+  }
+
+  .image-preview-container {
+    max-height: 250px;
+  }
+
+  .image-preview-img {
+    max-height: 250px;
+  }
 }

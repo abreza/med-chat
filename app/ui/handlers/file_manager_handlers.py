@@ -2,10 +2,10 @@ import json
 import uuid
 import shutil
 from typing import Dict, List, Tuple, Optional
-from ...core.config.constants import SUPPORTED_IMAGE_TYPES
 from ...core.config.settings import Config
 from ..components.file_manager.view import generate_file_list_html
-from ...utils.file import get_file_type, read_file_content_safe, safe_remove_file, create_file_info
+from ...utils.file import get_file_type, read_file_content_safe, safe_remove_file, create_file_info, get_file_extension
+from ...utils.medical import get_medical_file_subtype
 
 
 class FileManagerResponse:
@@ -34,10 +34,9 @@ class FileManagerHandlers:
             file_id = str(uuid.uuid4())
             original_name = file.name.split(
                 '/')[-1] if '/' in file.name else file.name
-            file_ext = '.' + \
-                original_name.split(
-                    '.')[-1].lower() if '.' in original_name else ''
-            file_type = get_file_type(file_ext, SUPPORTED_IMAGE_TYPES)
+            file_ext = get_file_extension(original_name)
+
+            file_type = get_file_type(file_ext)
             if not file_type:
                 return None
 
@@ -46,13 +45,18 @@ class FileManagerHandlers:
             shutil.copy2(file.name, new_file_path)
 
             content = None
+            subtype = None
+
             if file_type == 'text':
                 content = read_file_content_safe(new_file_path)
+            elif file_type == 'medical':
+                subtype = get_medical_file_subtype(file_ext)
 
             file_info = create_file_info(
-                file_id, original_name, file_type, new_file_path, content)
+                file_id, original_name, file_type, new_file_path, content, subtype)
             return file_id, file_info
-        except Exception:
+        except Exception as e:
+            print(f"Error processing file: {e}")
             return None
 
     def handle_file_upload(self, uploaded_files: List, files_data: Dict, selected_files: List[str]) -> Tuple:

@@ -2,6 +2,8 @@ import os
 from typing import Dict, List, Optional, Union
 from pathlib import Path
 
+from app.core.config.constants import SUPPORTED_IMAGE_TYPES, SUPPORTED_MEDICAL_TYPES, SUPPORTED_TEXT_TYPES
+
 
 def format_file_size(size_input: Union[int, str, Path]) -> str:
     if isinstance(size_input, (str, Path)):
@@ -22,12 +24,18 @@ def format_file_size(size_input: Union[int, str, Path]) -> str:
         return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
 
-def get_file_type(file_ext: str, supported_image_types: List[str]) -> Optional[str]:
+def get_file_type(file_ext: str) -> Optional[str]:
     file_ext = file_ext.lower()
-    if file_ext in supported_image_types:
+
+    if file_ext in SUPPORTED_IMAGE_TYPES:
         return 'image'
-    elif file_ext in ['.txt', '.md', '.json', '.csv', '.py', '.js', '.html', '.css', '.xml', '.yaml', '.yml']:
+
+    if file_ext in SUPPORTED_MEDICAL_TYPES:
+        return 'medical'
+
+    if file_ext in SUPPORTED_TEXT_TYPES:
         return 'text'
+
     return None
 
 
@@ -53,15 +61,20 @@ def safe_remove_file(file_path: Union[str, Path]) -> bool:
         return False
 
 
-def create_file_info(file_id: str, original_name: str, file_type: str, file_path: Path, content: Optional[str] = None) -> Dict:
+def create_file_info(file_id: str, original_name: str, file_type: str, file_path: Path, content: Optional[str] = None, subtype: Optional[str] = None) -> Dict:
     file_size = format_file_size(file_path)
-    return {
+    file_info = {
         'name': original_name,
         'type': file_type,
         'path': str(file_path),
         'size': file_size,
         'content': content
     }
+
+    if subtype:
+        file_info['subtype'] = subtype
+
+    return file_info
 
 
 def extract_image_files(files: List, supported_types: List[str]) -> List:
@@ -78,7 +91,9 @@ def extract_image_files(files: List, supported_types: List[str]) -> List:
 
 
 def get_file_extension(filename: str) -> str:
-    if '.' in filename:
+    if filename.lower().endswith('.nii.gz'):
+        return '.nii.gz'
+    elif '.' in filename:
         return '.' + filename.split('.')[-1].lower()
     return ''
 

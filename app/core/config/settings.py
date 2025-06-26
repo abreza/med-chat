@@ -11,15 +11,15 @@ class Config:
     DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4.1-nano")
     APP_NAME = os.getenv("APP_NAME", "Medical AI Assistant")
     APP_URL = os.getenv("APP_URL", "https://localhost:7860")
+
     BASE_DIR = Path.cwd()
+
     DATA_DIR = BASE_DIR / "data"
-    ASR_MODEL_DIR = DATA_DIR / "dolphin" / "models"
     TTS_MODEL_DIR = DATA_DIR / "piper" / "models"
-    DOLPHIN_ASSETS_DIR = DATA_DIR / "dolphin" / "assets"
 
     @classmethod
     def ensure_directories(cls):
-        for directory in [cls.DATA_DIR, cls.ASR_MODEL_DIR, cls.TTS_MODEL_DIR, cls.DOLPHIN_ASSETS_DIR]:
+        for directory in [cls.DATA_DIR, cls.TTS_MODEL_DIR]:
             directory.mkdir(parents=True, exist_ok=True)
 
 

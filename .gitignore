@@ -1,6 +1,6 @@
 .env
 venv
 **/__pycache__
-data/*
-!data/piper/voices.json
-lib/medchatinput/data/*
+core/data/*
+core/lib/medchatinput/data/*
+tts-service/data/*

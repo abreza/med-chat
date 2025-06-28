@@ -1,7 +1,7 @@
 from openai import OpenAI
 from typing import List, Dict, Any
 from app.config.settings import Config
-from ...utils.error import handle_api_error
+from app.utils.error import handle_api_error
 
 
 class OpenRouterClient:

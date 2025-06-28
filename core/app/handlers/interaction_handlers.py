@@ -7,10 +7,10 @@ from ..components.interaction_panel import (
     generate_medical_file_preview_html,
     get_image_mime_type
 )
-from ...utils.data import extract_selected_files_for_llm
-from ...utils.image import encode_image_to_base64, get_file_path
-from ...core.llm.openrouter_client import OpenRouterClient
-from ...core.llm.model_manager import ModelManager
+from app.utils.data import extract_selected_files_for_llm
+from app.utils.image import encode_image_to_base64, get_file_path
+from app.core.llm.openrouter_client import OpenRouterClient
+from app.core.llm.model_manager import ModelManager
 
 
 class InteractionHandlers:

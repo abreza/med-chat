@@ -1,15 +1,14 @@
-# app_setup.py
 from gradio_medchatinput import MedChatInput
-from app.ui.components.chat_interface import create_chat_interface, setup_transcription_events
-from app.ui.components.settings_panel import create_settings_panel
-from app.ui.components.file_manager.file_manager import create_file_manager, get_file_manager_js
-from app.ui.components.interaction_panel import create_interaction_panel
-from app.ui.handlers.chat_handlers import ChatHandlers
-from app.core.audio.tts_manager import TTSManager
-from app.ui.handlers.settings_handlers import SettingsHandlers
-from app.ui.handlers.file_manager_handlers import FileManagerHandlers
-from app.ui.handlers.interaction_handlers import InteractionHandlers
-from app.core.audio.asr_config import get_language_options
+from app.components.chat_interface import create_chat_interface, setup_transcription_events
+from app.components.settings_panel import create_settings_panel
+from app.components.file_manager.file_manager import create_file_manager, get_file_manager_js
+from app.components.interaction_panel import create_interaction_panel
+from app.handlers.chat_handlers import ChatHandlers
+from app.handlers.tts_manager import TTSManager
+from app.handlers.settings_handlers import SettingsHandlers
+from app.handlers.file_manager_handlers import FileManagerHandlers
+from app.handlers.interaction_handlers import InteractionHandlers
+from app.config.asr_config import get_language_options
 from app.utils.static import assets
 import gradio as gr
 

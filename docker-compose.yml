@@ -1,36 +1,53 @@
 services:
-  medical-ai-assistant:
-    build:
-      context: ./core
-      dockerfile: Dockerfile
-      target: runtime
-      args:
-        REBUILD_MEDCHATINPUT: ${REBUILD_MEDCHATINPUT:-false}
-    ports:
-      - "7860:7860"
-    env_file:
-      - ./core/.env
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-  
   tts-service:
     build: ./tts-service
     ports:
       - "8001:8001"
-    environment:
-      - TTS_MODEL_DIR=/app/data/piper/models
-      - TTS_VOICES_FILE=/app/data/piper/voices.json
-      - TTS_PORT=8001
-      - TTS_RELOAD=false
-    restart: unless-stopped
+    env_file:
+      - ./tts-service/.env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 30s
+    networks:
+      - medical-ai-network
+
+  asr-service:
+    build: ./asr-service
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./asr-service/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - medical-ai-network
+
+  core:
+    build: 
+      context: ./core
+      args:
+        REBUILD_MEDCHATINPUT: false
+    container_name: medical-ai-core
+    ports:
+      - "7860:7860"
+    env_file:
+      - ./core/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - medical-ai-network
+
+networks:
+  medical-ai-network:
+    driver: bridge

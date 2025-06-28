@@ -2,5 +2,5 @@
 venv
 **/__pycache__
 core/data/*
-core/lib/medchatinput/data/*
 tts-service/data/*
+asr-service/data/*

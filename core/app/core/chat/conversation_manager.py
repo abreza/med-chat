@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Tuple, Optional
 from ..llm.openrouter_client import OpenRouterClient
-from ...utils.image import encode_image_to_base64
-from ...utils.error import format_error_response
+from app.utils.image import encode_image_to_base64
+from app.utils.error import format_error_response
 
 
 class ConversationManager:

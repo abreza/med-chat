@@ -1,6 +1,6 @@
 import time
 from typing import List, Optional, Dict, Any
-from ...utils.image import encode_image_to_base64, get_file_path
+from app.utils.image import encode_image_to_base64, get_file_path
 
 
 class ChatState:

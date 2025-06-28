@@ -1,0 +1,7 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+numpy==1.23.5
+dataoceanai-dolphin==20250519
+torchaudio==2.7.1
+python-multipart==0.0.7

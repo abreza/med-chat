@@ -1,7 +1,7 @@
 import gradio as gr
 from typing import Dict, List, Any
-from ...utils.medical import get_medical_file_info, extract_dicom_image, extract_nifti_slice
-from ...utils.static import assets
+from app.utils.medical import get_medical_file_info, extract_dicom_image, extract_nifti_slice
+from app.utils.static import assets
 
 
 def create_interaction_panel() -> Dict[str, Any]:

@@ -1,9 +1,9 @@
 from typing import Dict, List, Any, Tuple
-from ...core.chat.conversation_manager import ConversationManager
-from ...core.llm.openrouter_client import OpenRouterClient
-from ...utils.validation import validate_message_input
+from app.core.chat.conversation_manager import ConversationManager
+from app.core.llm.openrouter_client import OpenRouterClient
+from app.utils.validation import validate_message_input
 from app.config.constants import SUPPORTED_IMAGE_TYPES
-from ...utils.data import extract_selected_files_for_llm, filter_files_by_type
+from app.utils.data import extract_selected_files_for_llm, filter_files_by_type
 
 
 class ChatHandlers:

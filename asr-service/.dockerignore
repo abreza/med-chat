@@ -6,7 +6,6 @@
 .Python
 **/build/
 **/develop-eggs/
-**/dist/
 **/downloads/
 **/eggs/
 **/.eggs/
@@ -18,14 +17,6 @@
 **/*.egg-info/
 **/.installed.cfg
 **/*.egg
-
-# Node.js
-**/node_modules/
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/.npm
-**/.yarn
 
 # Virtual environments
 **/venv/
@@ -68,6 +59,3 @@ README.md
 .env.development
 .env.test
 .env.production
-
-**/node_modules
-lib/medchatinput/dist

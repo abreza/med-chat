@@ -1,9 +1,6 @@
 """gr.MedChatInput() component."""
 
 from __future__ import annotations
-import base64
-import tempfile
-import os
 
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -19,7 +16,6 @@ from gradio.events import Events
 from gradio.i18n import I18nData
 
 from .asr.transcribtion import transcribe
-from .asr.setup_dolphin import setup_dolphin_model
 
 if TYPE_CHECKING:
     from gradio.components import Timer
@@ -219,9 +215,6 @@ class MedChatInput(FormComponent):
         self.transcription_language = transcription_language
         self.transcription_region = transcription_region
         self.keep_audio_after_transcribe = keep_audio_after_transcribe
-        
-        if self.auto_transcribe and "microphone" in self.sources:
-            setup_dolphin_model()
 
         super().__init__(
             label=label,
@@ -252,17 +245,8 @@ class MedChatInput(FormComponent):
             return ""
         
         try:
-            audio_data = base64.b64decode(audio_data_base64)
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
-                temp_file.write(audio_data)
-                temp_file_path = temp_file.name
-            try:
-                transcribed_text = transcribe(audio_data)
-                return transcribed_text.strip() if transcribed_text else ""
-                
-            finally:
-                if os.path.exists(temp_file_path):
-                    os.unlink(temp_file_path)
+            from .asr.transcribtion import transcribe_base64
+            return transcribe_base64(audio_data_base64)
             
         except Exception as e:
             print(f"Immediate transcription error: {e}")

@@ -4,8 +4,8 @@ import shutil
 from typing import Dict, List, Tuple, Optional
 from app.config.settings import Config
 from ..components.file_manager.view import generate_file_list_html
-from ...utils.file import get_file_type, read_file_content_safe, safe_remove_file, create_file_info, get_file_extension
-from ...utils.medical import get_medical_file_subtype
+from app.utils.file import get_file_type, read_file_content_safe, safe_remove_file, create_file_info, get_file_extension
+from app.utils.medical import get_medical_file_subtype
 
 
 class FileManagerResponse:

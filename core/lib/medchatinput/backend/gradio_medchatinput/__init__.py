@@ -1,4 +1,3 @@
-
 from .medchatinput import MedChatInput
 
-__all__ = ['MedChatInput']
+__all__ = ["MedChatInput"]

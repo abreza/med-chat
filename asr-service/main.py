@@ -40,7 +40,8 @@ app = FastAPI(
     lifespan=lifespan,
     openapi_tags=TAGS_METADATA,
     contact=FASTAPI_CONFIG["contact"],
-    license_info=FASTAPI_CONFIG["license_info"]
+    license_info=FASTAPI_CONFIG["license_info"],
+    root_path="/api/asr"
 )
 
 

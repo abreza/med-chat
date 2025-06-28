@@ -90,7 +90,7 @@ async def transcribe_audio(
                 language=result.get('language'),
                 region=result.get('region'),
                 confidence=result.get('confidence'),
-                model_used=model
+                used_model=model
             )
 
         finally:
@@ -137,7 +137,7 @@ async def transcribe_base64(request: ASRRequest):
             language=result.get('language'),
             region=result.get('region'),
             confidence=result.get('confidence'),
-            model_used=request.model
+            used_model=request.model
         )
 
     except HTTPException:

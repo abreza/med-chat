@@ -37,7 +37,16 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: sh -c "trap exit TERM; while :; do certbot renew --webroot --webroot-path=/var/www/certbot; sleep 12h & wait $${!}; done;"
+    entrypoint: /bin/sh
+    command: 
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot renew --webroot --webroot-path=/var/www/certbot
+          sleep 12h &
+          wait $$!
+        done
     restart: unless-stopped
     depends_on:
       - nginx
@@ -45,8 +54,10 @@ services:
       - medical-ai-network
 
   tts-service:
-    build: ./tts-service
-    container_name: medical-ai-tts
+    image: med-chat-tts-service:latest
+    # build: ./tts-service
+    ports:
+      - "8001:8001"
     expose:
       - "8001"
     env_file:
@@ -62,8 +73,10 @@ services:
       - medical-ai-network
 
   asr-service:
-    build: ./asr-service
-    container_name: medical-ai-asr
+    image: med-chat-asr-service:latest
+    # build: ./asr-service
+    ports:
+      - "8002:8002"
     expose:
       - "8002"
     env_file:
@@ -79,11 +92,13 @@ services:
       - medical-ai-network
 
   core:
-    build: 
-      context: ./core
-      args:
-        REBUILD_MEDCHATINPUT: false
-    container_name: medical-ai-core
+    image: med-chat-core:latest
+    # build:
+    #   context: ./core
+    #   args:
+    #     REBUILD_MEDCHATINPUT: false
+    ports:
+      - "7860:7860"
     expose:
       - "7860"
     env_file:

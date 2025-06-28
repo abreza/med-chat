@@ -4,3 +4,4 @@ venv
 core/data/*
 tts-service/data/*
 asr-service/data/*
+certbot/

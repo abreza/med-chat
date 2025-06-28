@@ -32,7 +32,7 @@ class TranscribeResponse(BaseModel):
     region: Optional[str] = Field(description="Detected region code")
     confidence: Optional[float] = Field(
         description="Transcription confidence score")
-    model_used: str = Field(description="ASR model used for transcription")
+    used_model: str = Field(description="ASR model used for transcription")
 
 
 class LanguageInfo(BaseModel):

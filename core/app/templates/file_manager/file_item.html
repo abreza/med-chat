@@ -1,0 +1,32 @@
+<div class="file-item {% if is_selected %}selected{% endif %}">
+    <div class="file-item-content">
+        <div class="file-item-main">
+            <label class="file-item-label">
+                <input type="checkbox" 
+                       data-file-id="{{ file_id }}" 
+                       {% if is_selected %}checked{% endif %} 
+                       onchange="updateSelection('{{ file_id }}', this)" 
+                       class="file-checkbox">
+                <span class="file-icon">{{ file_info.type | file_icon(file_info.subtype or '') }}</span>
+                <div class="file-info">
+                    <div class="file-name">{{ file_info.name or 'Unknown' }}</div>
+                    <div class="file-meta">
+                        <span class="file-type" style="color: {{ file_info.type | file_type_color }};">
+                            {% if file_info.type == 'medical' and file_info.subtype %}
+                                {{ file_info.subtype.upper() }}
+                            {% else %}
+                                {{ file_info.type.upper() }}
+                            {% endif %}
+                        </span> 
+                        <span class="file-size">{{ file_info.size or '0 B' }}</span>
+                    </div>
+                </div>
+            </label>
+        </div>
+        <div class="file-actions">
+            <button onclick="removeFile('{{ file_id }}')" 
+                    class="remove-btn"
+                    title="Remove file">🗑️</button>
+        </div>
+    </div>
+</div>

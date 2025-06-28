@@ -1,8 +1,6 @@
 from gradio_medchatinput import MedChatInput
-from app.components.chat_interface import create_chat_interface, setup_transcription_events
 from app.components.settings_panel import create_settings_panel
 from app.components.file_manager.file_manager import create_file_manager, get_file_manager_js
-from app.components.interaction_panel import create_interaction_panel
 from app.handlers.chat_handlers import ChatHandlers
 from app.handlers.tts_manager import TTSManager
 from app.handlers.settings_handlers import SettingsHandlers
@@ -41,18 +39,9 @@ class AppSetup:
         )
         return file_manager_components, settings_components
 
-    def create_chat_components(self):
-        chat_components = create_chat_interface()
-        setup_transcription_events(chat_components)
-        return chat_components
-
-    def create_interaction_components(self):
-        interaction_components = create_interaction_panel()
-        return interaction_components
-
     def get_handlers(self):
         return {
-            'tts_manager': self.tts_manager,  # Updated key name
+            'tts_manager': self.tts_manager,
             'chat_handlers': self.chat_handlers,
             'settings_handlers': self.settings_handlers,
             'file_manager_handlers': self.file_manager_handlers,

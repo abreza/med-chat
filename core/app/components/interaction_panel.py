@@ -2,6 +2,8 @@ import gradio as gr
 from typing import Dict, List, Any
 from app.utils.medical import get_medical_file_info, extract_dicom_image, extract_nifti_slice
 from app.utils.static import assets
+from app.utils.template_engine import template_engine
+import base64
 
 
 def create_interaction_panel() -> Dict[str, Any]:
@@ -93,90 +95,58 @@ def create_interaction_panel() -> Dict[str, Any]:
 
 
 def generate_empty_preview_html() -> str:
-    css = assets.load_css("interaction_panel.css")
-    return f"""
-    {css}
-    <div class="empty-preview">
-        <div class="empty-preview-icon">🔍</div>
-        <h4 class="empty-preview-title">No File Selected</h4>
-        <p class="empty-preview-subtitle">Select files from the file manager to preview them here</p>
-    </div>
-    """
+    css_content = assets.load_css("interaction_panel.css")
+    return template_engine.render(
+        'interaction/empty_preview.html',
+        css_content=css_content
+    )
 
 
 def generate_single_file_preview_html(file_info: Dict[str, Any]) -> str:
-    css = assets.load_css("interaction_panel.css")
-    file_name = file_info.get('name', 'Unknown')
+    css_content = assets.load_css("interaction_panel.css")
     file_type = file_info.get('type', 'unknown')
-    file_size = file_info.get('size', '0 B')
 
     if file_type == 'medical':
         return generate_medical_file_preview_html(file_info)
 
-    icon = get_file_icon(file_type)
-    type_color = get_file_type_color(file_type)
+    preview_content = None
 
-    preview_content = ""
     if file_type == 'text':
         content = file_info.get('content', '')
         if content:
             display_content = content[:1000] + \
                 "..." if len(content) > 1000 else content
-            preview_content = f"""
-            <div class="content-preview">
-                <div class="content-preview-header">File Content</div>
-                <pre class="content-preview-text">{_escape_html(display_content)}</pre>
-            </div>
-            """
+            preview_content = template_engine.render(
+                'interaction/content_preview.html',
+                content=display_content
+            )
     elif file_type == 'image':
         file_path = file_info.get('path', '')
         if file_path:
             try:
-                import base64
                 with open(file_path, 'rb') as f:
                     encoded_image = base64.b64encode(f.read()).decode('utf-8')
-                preview_content = f"""
-                <div class="image-preview">
-                    <div class="image-preview-header">Image Preview</div>
-                    <div class="image-preview-container">
-                        <img src="data:image/jpeg;base64,{encoded_image}" 
-                             alt="{file_name}"
-                             class="image-preview-img" />
-                    </div>
-                </div>
-                """
+                preview_content = template_engine.render(
+                    'interaction/image_preview.html',
+                    encoded_image=encoded_image,
+                    file_name=file_info.get('name', 'Unknown')
+                )
             except Exception:
-                preview_content = f"""
-                <div class="image-preview">
-                    <div class="image-fallback">
-                        <div class="image-fallback-icon">{icon}</div>
-                        <p class="image-fallback-text">Image preview not available</p>
-                    </div>
-                </div>
-                """
+                preview_content = template_engine.render(
+                    'interaction/image_fallback.html',
+                    icon=template_engine._get_file_icon(file_type)
+                )
 
-    return f"""
-    {css}
-    <div class="single-file-preview">
-        <div class="file-preview-header">
-            <span class="file-preview-icon">{icon}</span>
-            <div class="file-preview-info">
-                <h4 class="file-preview-name">{file_name}</h4>
-                <div class="file-preview-meta">
-                    <span class="file-preview-type" style="color: {type_color};">
-                        {file_type.upper()} FILE
-                    </span>
-                    <span class="file-preview-size">{file_size}</span>
-                </div>
-            </div>
-        </div>
-        {preview_content}
-    </div>
-    """
+    return template_engine.render(
+        'interaction/single_file_preview.html',
+        css_content=css_content,
+        file_info=file_info,
+        preview_content=preview_content
+    )
 
 
 def generate_multiple_files_preview_html(files_data: Dict[str, Any], selected_files: List[str]) -> str:
-    css = assets.load_css("interaction_panel.css")
+    css_content = assets.load_css("interaction_panel.css")
     file_count = len(selected_files)
 
     file_types = {}
@@ -188,49 +158,22 @@ def generate_multiple_files_preview_html(files_data: Dict[str, Any], selected_fi
                 file_types[file_type] = []
             file_types[file_type].append(file_info)
 
-    files_list_html = ""
-    for file_type, files in file_types.items():
-        icon = get_file_icon(file_type)
-        files_list_html += f"""
-        <div class="file-group">
-            <h5 class="file-group-header">
-                <span class="file-group-icon">{icon}</span>
-                {file_type.upper()} Files ({len(files)})
-            </h5>
-            <ul class="file-group-list">
-        """
-        for file_info in files:
-            file_name = file_info.get('name', 'Unknown')
-            file_size = file_info.get('size', '0 B')
-            files_list_html += f"""
-                <li class="file-group-item">
-                    <span class="file-group-name">{file_name}</span>
-                    <span class="file-group-size">({file_size})</span>
-                </li>
-            """
-        files_list_html += "</ul></div>"
-
-    return f"""
-    {css}
-    <div class="multiple-files-preview">
-        <div class="files-overview">
-            <h4 class="overview-title">📁 Multiple Files Selected</h4>
-            <p class="overview-subtitle">{file_count} files ready for interaction</p>
-        </div>
-        <div class="files-list-container">
-            {files_list_html}
-        </div>
-    </div>
-    """
+    return template_engine.render(
+        'interaction/multiple_files_preview.html',
+        css_content=css_content,
+        file_count=file_count,
+        file_types=file_types
+    )
 
 
 def generate_medical_file_preview_html(file_info: Dict[str, Any]) -> str:
-    css = assets.load_css("medical_preview.css")
-    file_name = file_info.get('name', 'Unknown')
-    file_size = file_info.get('size', '0 B')
+    css_content = assets.load_css("medical_preview.css")
     file_path = file_info.get('path', '')
 
-    medical_info = get_medical_file_info(file_path)
+    try:
+        medical_info = get_medical_file_info(file_path)
+    except Exception as e:
+        return generate_error_preview_html(str(e))
 
     slice_index = file_info.get('slice_index', 0)
     axis = file_info.get('axis', 2)
@@ -244,144 +187,24 @@ def generate_medical_file_preview_html(file_info: Dict[str, Any]) -> str:
     elif medical_info["type"] == "nifti":
         preview_image = extract_nifti_slice(file_path, slice_index, axis)
 
-    icon = "🏥" if medical_info["type"] == "dicom" else "🧠"
-    type_color = "#e74c3c" if medical_info["type"] == "dicom" else "#9b59b6"
-
-    info_html = ""
-    if medical_info["type"] == "dicom":
-        info_html = f"""
-        <div class="medical-info">
-            <div class="medical-info-row">
-                <strong>Patient:</strong> {medical_info.get('patient_name', 'Unknown')}
-            </div>
-            <div class="medical-info-row">
-                <strong>Modality:</strong> {medical_info.get('modality', 'Unknown')}
-            </div>
-            <div class="medical-info-row">
-                <strong>Study Date:</strong> {medical_info.get('study_date', 'Unknown')}
-            </div>
-            <div class="medical-info-row">
-                <strong>Series:</strong> {medical_info.get('series_description', 'Unknown')}
-            </div>
-            <div class="medical-info-row">
-                <strong>Dimensions:</strong> {medical_info.get('rows', 0)} x {medical_info.get('columns', 0)}
-            </div>
-        </div>
-        """
-    elif medical_info["type"] == "nifti":
-        shape_str = " x ".join(map(str, medical_info.get('shape', [])))
-        voxel_str = " x ".join(map(str, medical_info.get('voxel_size', [])))
-        info_html = f"""
-        <div class="medical-info">
-            <div class="medical-info-row">
-                <strong>Shape:</strong> {shape_str}
-            </div>
-            <div class="medical-info-row">
-                <strong>Dimensions:</strong> {medical_info.get('dimensions', 0)}D
-            </div>
-            <div class="medical-info-row">
-                <strong>Voxel Size:</strong> {voxel_str}
-            </div>
-            <div class="medical-info-row">
-                <strong>Data Type:</strong> {medical_info.get('data_type', 'Unknown')}
-            </div>
-            <div class="medical-info-row">
-                <strong>Orientation:</strong> {medical_info.get('orientation', 'Unknown')}
-            </div>
-        </div>
-        """
-
-    image_html = ""
-    if preview_image:
-        axis_names = {0: "Sagittal", 1: "Coronal", 2: "Axial"}
-        current_axis_name = axis_names.get(axis, "Unknown")
-
-        image_html = f"""
-        <div class="medical-image-preview">
-            <div class="medical-image-header">
-                Medical Image Preview - {current_axis_name} View (Slice {slice_index + 1})
-            </div>
-            <div class="medical-image-container">
-                <img src="data:image/png;base64,{preview_image}" 
-                     alt="{file_name}"
-                     class="medical-image"
-                     id="medical-preview-image"
-                />
-            </div>
-        </div>
-        """
-    else:
-        image_html = f"""
-        <div class="medical-image-preview">
-            <div class="medical-image-header">Medical Image Preview</div>
-            <div class="medical-image-fallback">
-                <div class="medical-fallback-icon">{icon}</div>
-                <p class="medical-fallback-text">
-                    Medical file loaded<br>
-                    <small class="medical-fallback-small">Preview not available</small>
-                </p>
-            </div>
-        </div>
-        """
-
-    return f"""
-    {css}
-    <div class="medical-file-preview" data-file-type="{medical_info['type']}" data-file-path="{file_path}">
-        <div class="file-preview-header">
-            <span class="file-preview-icon">{icon}</span>
-            <div class="file-preview-info">
-                <h4 class="file-preview-name">{file_name}</h4>
-                <div class="file-preview-meta">
-                    <span class="file-preview-type" style="color: {type_color};">
-                        {medical_info['type'].upper()} FILE
-                    </span>
-                    <span class="file-preview-size">{file_size}</span>
-                </div>
-            </div>
-        </div>
-        {info_html}
-        {image_html}
-    </div>
-    """
+    return template_engine.render(
+        'interaction/medical_file_preview.html',
+        css_content=css_content,
+        file_info=file_info,
+        medical_info=medical_info,
+        slice_index=slice_index,
+        axis=axis,
+        preview_image=preview_image
+    )
 
 
 def generate_error_preview_html(error_message: str) -> str:
-    css = assets.load_css("medical_preview.css")
-    return f"""
-    {css}
-    <div class="medical-error-preview">
-        <div class="medical-error-icon">⚠️</div>
-        <h4 class="medical-error-title">Medical File Error</h4>
-        <p class="medical-error-message">{error_message}</p>
-    </div>
-    """
-
-
-def get_file_icon(file_type: str, subtype: str = '') -> str:
-    if file_type == 'medical':
-        if subtype == 'dicom':
-            return '🏥'
-        elif subtype == 'nifti':
-            return '🧠'
-        else:
-            return '⚕️'
-
-    icons = {
-        'image': '🖼️',
-        'text': '📄',
-        'unknown': '📎'
-    }
-    return icons.get(file_type, '📎')
-
-
-def get_file_type_color(file_type: str) -> str:
-    colors = {
-        'image': '#10b981',
-        'text': '#3b82f6',
-        'medical': '#e11d48',
-        'unknown': '#6b7280'
-    }
-    return colors.get(file_type, '#6b7280')
+    css_content = assets.load_css("medical_preview.css")
+    return template_engine.render(
+        'interaction/error_preview.html',
+        css_content=css_content,
+        error_message=error_message
+    )
 
 
 def get_image_mime_type(file_path: str) -> str:
@@ -395,11 +218,3 @@ def get_image_mime_type(file_path: str) -> str:
         'webp': 'image/webp'
     }
     return mime_types.get(file_ext, 'image/jpeg')
-
-
-def _escape_html(text: str) -> str:
-    return (text.replace('&', '&amp;')
-            .replace('<', '&lt;')
-            .replace('>', '&gt;')
-            .replace('"', '&quot;')
-            .replace("'", '&#x27;'))

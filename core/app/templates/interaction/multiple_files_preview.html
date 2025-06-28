@@ -1,0 +1,26 @@
+{{ css_content | safe }}
+
+<div class="multiple-files-preview">
+    <div class="files-overview">
+        <h4 class="overview-title">📁 Multiple Files Selected</h4>
+        <p class="overview-subtitle">{{ file_count }} files ready for interaction</p>
+    </div>
+    <div class="files-list-container">
+        {% for file_type, files in file_types.items() %}
+            <div class="file-group">
+                <h5 class="file-group-header">
+                    <span class="file-group-icon">{{ file_type | file_icon }}</span>
+                    {{ file_type.upper() }} Files ({{ files | length }})
+                </h5>
+                <ul class="file-group-list">
+                    {% for file_info in files %}
+                        <li class="file-group-item">
+                            <span class="file-group-name">{{ file_info.name or 'Unknown' }}</span>
+                            <span class="file-group-size">({{ file_info.size or '0 B' }})</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+</div>

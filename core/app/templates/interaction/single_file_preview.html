@@ -1,0 +1,20 @@
+{{ css_content | safe }}
+
+<div class="single-file-preview">
+    <div class="file-preview-header">
+        <span class="file-preview-icon">{{ file_info.type | file_icon(file_info.subtype or '') }}</span>
+        <div class="file-preview-info">
+            <h4 class="file-preview-name">{{ file_info.name or 'Unknown' }}</h4>
+            <div class="file-preview-meta">
+                <span class="file-preview-type" style="color: {{ file_info.type | file_type_color }};">
+                    {{ file_info.type.upper() }} FILE
+                </span>
+                <span class="file-preview-size">{{ file_info.size or '0 B' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    {% if preview_content %}
+        {{ preview_content | safe }}
+    {% endif %}
+</div>

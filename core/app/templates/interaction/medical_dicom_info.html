@@ -1,0 +1,17 @@
+<div class="medical-info">
+    <div class="medical-info-row">
+        <strong>Patient:</strong> {{ medical_info.patient_name or 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Modality:</strong> {{ medical_info.modality or 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Study Date:</strong> {{ medical_info.study_date or 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Series:</strong> {{ medical_info.series_description or 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Dimensions:</strong> {{ medical_info.rows or 0 }} x {{ medical_info.columns or 0 }}
+    </div>
+</div>

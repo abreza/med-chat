@@ -1,0 +1,14 @@
+{% set axis_names = {0: "Sagittal", 1: "Coronal", 2: "Axial"} %}
+{% set current_axis_name = axis_names.get(axis, "Unknown") %}
+
+<div class="medical-image-preview">
+    <div class="medical-image-header">
+        Medical Image Preview - {{ current_axis_name }} View (Slice {{ slice_index + 1 }})
+    </div>
+    <div class="medical-image-container">
+        <img src="data:image/png;base64,{{ preview_image }}" 
+             alt="{{ file_info.name }}"
+             class="medical-image"
+             id="medical-preview-image" />
+    </div>
+</div>

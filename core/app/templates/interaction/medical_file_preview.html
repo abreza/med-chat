@@ -1,0 +1,28 @@
+{{ css_content | safe }}
+
+<div class="medical-file-preview" data-file-type="{{ medical_info.type }}" data-file-path="{{ file_info.path }}">
+    <div class="file-preview-header">
+        <span class="file-preview-icon">{{ medical_info.type | file_icon(file_info.subtype or '') }}</span>
+        <div class="file-preview-info">
+            <h4 class="file-preview-name">{{ file_info.name or 'Unknown' }}</h4>
+            <div class="file-preview-meta">
+                <span class="file-preview-type" style="color: {{ medical_info.type | file_type_color }};">
+                    {{ medical_info.type.upper() }} FILE
+                </span>
+                <span class="file-preview-size">{{ file_info.size or '0 B' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    {% if medical_info.type == 'dicom' %}
+        {% include 'interaction/medical_dicom_info.html' %}
+    {% elif medical_info.type == 'nifti' %}
+        {% include 'interaction/medical_nifti_info.html' %}
+    {% endif %}
+    
+    {% if preview_image %}
+        {% include 'interaction/medical_image_preview.html' %}
+    {% else %}
+        {% include 'interaction/medical_image_fallback.html' %}
+    {% endif %}
+</div>

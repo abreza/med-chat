@@ -1,0 +1,10 @@
+{{ css_content | safe }}
+
+<div id="file-manager-container" class="file-manager-container">
+    {% include 'file_manager/file_stats.html' %}
+    
+    {% for file_id, file_info in files_data.items() %}
+        {% set is_selected = file_id in selected_files %}
+        {% include 'file_manager/file_item.html' %}
+    {% endfor %}
+</div>

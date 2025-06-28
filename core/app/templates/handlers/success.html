@@ -1,0 +1,14 @@
+<div class="explain-result explain-success">
+    <div class="explain-header">
+        <span class="explain-icon">✅</span>
+        <div class="explain-info">
+            <strong class="explain-title">{{ action }} Complete</strong>
+            <span class="explain-subtitle">
+                Successfully processed {{ file_count }} file{% if file_count > 1 %}s{% endif %}
+            </span>
+        </div>
+    </div>
+    <div class="explain-content">
+        {{ response | escape_html }}
+    </div>
+</div>

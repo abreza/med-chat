@@ -1,0 +1,17 @@
+<div class="medical-info">
+    <div class="medical-info-row">
+        <strong>Shape:</strong> {{ medical_info.shape | join(' x ') if medical_info.shape else 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Dimensions:</strong> {{ medical_info.dimensions or 0 }}D
+    </div>
+    <div class="medical-info-row">
+        <strong>Voxel Size:</strong> {{ medical_info.voxel_size | join(' x ') if medical_info.voxel_size else 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Data Type:</strong> {{ medical_info.data_type or 'Unknown' }}
+    </div>
+    <div class="medical-info-row">
+        <strong>Orientation:</strong> {{ medical_info.orientation or 'Unknown' }}
+    </div>
+</div>

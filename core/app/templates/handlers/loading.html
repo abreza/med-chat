@@ -1,0 +1,15 @@
+<div class="explain-result explain-loading">
+    <div class="explain-header">
+        <span class="explain-icon loading-icon">🔄</span>
+        <div class="explain-info">
+            <strong class="explain-title">{{ action_display }} Files...</strong>
+            <span class="explain-subtitle">
+                {{ action_display }} {{ file_count }} file{% if file_count > 1 %}s{% endif %}, please wait...
+            </span>
+        </div>
+    </div>
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <span class="loading-text">AI is {{ action_text }} your files</span>
+    </div>
+</div>

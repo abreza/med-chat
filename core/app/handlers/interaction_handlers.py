@@ -12,6 +12,7 @@ from app.utils.image import encode_image_to_base64, get_file_path
 from app.utils.medical import get_medical_file_info
 from app.core.llm.openrouter_client import OpenRouterClient
 from app.core.llm.model_manager import ModelManager
+from app.utils.template_engine import template_engine
 
 
 class InteractionHandlers:
@@ -106,25 +107,22 @@ class InteractionHandlers:
         return medical_controls_update, slice_slider_update, axis_dropdown_update
 
     def _get_slice_counts(self, medical_info: Dict[str, Any]) -> Dict[int, int]:
-        """Get the number of slices for each axis from medical file info"""
         slice_counts = {}
 
         if medical_info["type"] == "dicom":
             rows = medical_info.get('rows', 1)
             columns = medical_info.get('columns', 1)
             slice_counts = {
-                0: columns,  # Sagittal view
-            
-            
+                0: columns,
             }
 
         elif medical_info["type"] == "nifti":
             shape = medical_info.get('shape', [1, 1, 1])
             if len(shape) >= 3:
                 slice_counts = {
-                    0: shape[0],  # Sagittal (X axis)
-                    1: shape[1],  # Coronal (Y axis)
-                    2: shape[2]   # Axial (Z axis)
+                    0: shape[0],
+                    1: shape[1],
+                    2: shape[2]
                 }
             else:
                 slice_counts = {0: 1, 1: 1, 2: 1}
@@ -422,60 +420,24 @@ class InteractionHandlers:
         action_text = action.lower()
         action_display = action
 
-        return f"""
-        <div class="explain-result explain-loading">
-            <div class="explain-header">
-                <span class="explain-icon loading-icon">🔄</span>
-                <div class="explain-info">
-                    <strong class="explain-title">{action_display} Files...</strong>
-                    <span class="explain-subtitle">
-                        {action_display} {file_count} file{'s' if file_count > 1 else ''}, please wait...
-                    </span>
-                </div>
-            </div>
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <span class="loading-text">AI is {action_text} your files</span>
-            </div>
-        </div>
-        """
+        return template_engine.render(
+            'handlers/loading.html',
+            file_count=file_count,
+            action=action,
+            action_text=action_text,
+            action_display=action_display
+        )
 
     def _generate_success_html(self, response: str, file_count: int, action: str = "Processing") -> str:
-        return f"""
-        <div class="explain-result explain-success">
-            <div class="explain-header">
-                <span class="explain-icon">✅</span>
-                <div class="explain-info">
-                    <strong class="explain-title">{action} Complete</strong>
-                    <span class="explain-subtitle">
-                        Successfully processed {file_count} file{'s' if file_count > 1 else ''}
-                    </span>
-                </div>
-            </div>
-            <div class="explain-content">
-                {self._escape_html(response)}
-            </div>
-        </div>
-        """
+        return template_engine.render(
+            'handlers/success.html',
+            response=response,
+            file_count=file_count,
+            action=action
+        )
 
     def _generate_error_html(self, error_message: str) -> str:
-        return f"""
-        <div class="explain-result explain-error">
-            <div class="explain-header">
-                <span class="explain-icon">❌</span>
-                <div class="explain-info">
-                    <strong class="explain-title">Processing Failed</strong>
-                    <span class="explain-subtitle">
-                        {self._escape_html(error_message)}
-                    </span>
-                </div>
-            </div>
-        </div>
-        """
-
-    def _escape_html(self, text: str) -> str:
-        return (text.replace('&', '&amp;')
-                .replace('<', '&lt;')
-                .replace('>', '&gt;')
-                .replace('"', '&quot;')
-                .replace("'", '&#x27;'))
+        return template_engine.render(
+            'handlers/error.html',
+            error_message=error_message
+        )

@@ -1,0 +1,12 @@
+{% set icon = '🏥' if medical_info.type == 'dicom' else '🧠' %}
+
+<div class="medical-image-preview">
+    <div class="medical-image-header">Medical Image Preview</div>
+    <div class="medical-image-fallback">
+        <div class="medical-fallback-icon">{{ icon }}</div>
+        <p class="medical-fallback-text">
+            Medical file loaded<br>
+            <small class="medical-fallback-small">Preview not available</small>
+        </p>
+    </div>
+</div>

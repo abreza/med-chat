@@ -31,17 +31,15 @@ def create_chat_interface(default_language: str = "fa", default_region: str = No
     response_audio = gr.Audio(label="🔊 AI Response",
                               autoplay=True, visible=True)
 
+    transcription_trigger.change(
+        fn=MedChatInput.transcribe,
+        inputs=[transcription_trigger],
+        outputs=[transcription_result],
+        show_progress=False
+    )
+
     return {
         "chatbot": chatbot, "user_input": user_input, "transcription_trigger": transcription_trigger,
         "transcription_result": transcription_result, "clear_btn": clear_btn,
         "response_audio": response_audio,
     }
-
-
-def setup_transcription_events(components: Dict[str, Any]) -> None:
-    components["transcription_trigger"].change(
-        fn=MedChatInput.transcribe,
-        inputs=[components["transcription_trigger"]],
-        outputs=[components["transcription_result"]],
-        show_progress=False
-    )

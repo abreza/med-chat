@@ -74,30 +74,6 @@ class FileManagerHandlers:
         response = self._generate_response(new_files_data, selected_files)
         return response.files_data, response.selected_files, response.file_list_html, None
 
-    def handle_select_all_files(self, files_data: Dict) -> Tuple:
-        all_file_ids = list(files_data.keys())
-        response = self._generate_response(files_data, all_file_ids)
-        return response.selected_files, response.file_list_html
-
-    def handle_deselect_all_files(self, files_data: Dict) -> Tuple:
-        response = self._generate_response(files_data, [])
-        return response.selected_files, response.file_list_html
-
-    def handle_remove_selected_files(self, files_data: Dict, selected_files: List[str]) -> Tuple:
-        if not selected_files:
-            response = self._generate_response(files_data, selected_files)
-            return response.files_data, response.selected_files, response.file_list_html
-
-        new_files_data = files_data.copy()
-        for file_id in selected_files:
-            if file_id in new_files_data:
-                file_path = new_files_data[file_id]['path']
-                safe_remove_file(file_path)
-                del new_files_data[file_id]
-
-        response = self._generate_response(new_files_data, [])
-        return response.files_data, response.selected_files, response.file_list_html
-
     def handle_js_trigger(self, trigger_data: str, files_data: Dict, selected_files: List[str]) -> Tuple:
         if not trigger_data or not trigger_data.strip():
             response = self._generate_response(files_data, selected_files)

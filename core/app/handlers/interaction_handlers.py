@@ -9,6 +9,7 @@ from ..components.interaction_panel import (
 )
 from app.utils.data import extract_selected_files_for_llm
 from app.utils.image import encode_image_to_base64, get_file_path
+from app.utils.medical import get_medical_file_info
 from app.core.llm.openrouter_client import OpenRouterClient
 from app.core.llm.model_manager import ModelManager
 
@@ -17,7 +18,7 @@ class InteractionHandlers:
     def __init__(self, llm_client: OpenRouterClient = None):
         self.llm_client = llm_client or OpenRouterClient()
 
-    def handle_file_selection_change(self, files_data: Dict[str, Any], selected_files: List[str]) -> Tuple[str, gr.update, gr.update, gr.update]:
+    def handle_file_selection_change(self, files_data: Dict[str, Any], selected_files: List[str]) -> Tuple[str, gr.update, gr.update, gr.update, gr.update, gr.update]:
         explain_btn_update = gr.update(interactive=len(selected_files) > 0)
 
         all_images = self._are_all_files_images(files_data, selected_files)
@@ -27,6 +28,8 @@ class InteractionHandlers:
         )
 
         medical_controls_update = gr.update(visible=False)
+        slice_slider_update = gr.update()
+        axis_dropdown_update = gr.update()
 
         if not selected_files:
             preview_html = generate_empty_preview_html()
@@ -36,9 +39,9 @@ class InteractionHandlers:
                 file_info = files_data[file_id]
                 file_type = file_info.get('type', 'unknown')
 
-                # Show medical controls if it's a medical file
                 if file_type == 'medical':
-                    medical_controls_update = gr.update(visible=True)
+                    medical_controls_update, slice_slider_update, axis_dropdown_update = self._configure_medical_controls(
+                        file_info)
                     preview_html = generate_medical_file_preview_html(
                         file_info)
                 else:
@@ -49,25 +52,120 @@ class InteractionHandlers:
             preview_html = generate_multiple_files_preview_html(
                 files_data, selected_files)
 
-        return preview_html, explain_btn_update, ocr_btn_update, medical_controls_update
+        return preview_html, explain_btn_update, ocr_btn_update, medical_controls_update, slice_slider_update, axis_dropdown_update
 
-    def handle_medical_slice_change(self, files_data: Dict[str, Any], selected_files: List[str], slice_value: int, axis: int) -> str:
+    def _configure_medical_controls(self, file_info: Dict[str, Any]) -> Tuple[gr.update, gr.update, gr.update]:
+        file_path = file_info.get('path', '')
+
+        try:
+            medical_info = get_medical_file_info(file_path)
+
+            slice_counts = self._get_slice_counts(medical_info)
+            max_slices = max(slice_counts.values()) if slice_counts else 1
+
+            if max_slices <= 1:
+                medical_controls_update = gr.update(visible=False)
+                slice_slider_update = gr.update()
+                axis_dropdown_update = gr.update()
+            else:
+                medical_controls_update = gr.update(visible=True)
+
+                current_axis = file_info.get('axis', 2)  # Default to axial
+                current_max_slices = slice_counts.get(current_axis, max_slices)
+
+                slice_slider_update = gr.update(
+                    minimum=0,
+                    maximum=max(0, current_max_slices - 1),
+                    value=min(file_info.get(
+                        'slice_index', current_max_slices // 2), current_max_slices - 1),
+                    step=1,
+                    visible=True
+                )
+
+                available_axes = []
+                axis_labels = {0: "Sagittal", 1: "Coronal", 2: "Axial"}
+                for axis, count in slice_counts.items():
+                    if count > 1:
+                        available_axes.append((axis_labels[axis], axis))
+
+                if len(available_axes) > 1:
+                    axis_dropdown_update = gr.update(
+                        choices=available_axes,
+                        value=current_axis,
+                        visible=True
+                    )
+                else:
+                    axis_dropdown_update = gr.update(visible=False)
+
+        except Exception as e:
+            print(f"Error configuring medical controls: {e}")
+            medical_controls_update = gr.update(visible=False)
+            slice_slider_update = gr.update()
+            axis_dropdown_update = gr.update()
+
+        return medical_controls_update, slice_slider_update, axis_dropdown_update
+
+    def _get_slice_counts(self, medical_info: Dict[str, Any]) -> Dict[int, int]:
+        """Get the number of slices for each axis from medical file info"""
+        slice_counts = {}
+
+        if medical_info["type"] == "dicom":
+            rows = medical_info.get('rows', 1)
+            columns = medical_info.get('columns', 1)
+            slice_counts = {
+                0: columns,  # Sagittal view
+            
+            
+            }
+
+        elif medical_info["type"] == "nifti":
+            shape = medical_info.get('shape', [1, 1, 1])
+            if len(shape) >= 3:
+                slice_counts = {
+                    0: shape[0],  # Sagittal (X axis)
+                    1: shape[1],  # Coronal (Y axis)
+                    2: shape[2]   # Axial (Z axis)
+                }
+            else:
+                slice_counts = {0: 1, 1: 1, 2: 1}
+
+        return slice_counts
+
+    def handle_medical_slice_change(self, files_data: Dict[str, Any], selected_files: List[str], slice_value: int, axis: int) -> Tuple[str, gr.update]:
         if len(selected_files) != 1:
-            return generate_empty_preview_html()
+            return generate_empty_preview_html(), gr.update()
 
         file_id = selected_files[0]
         if file_id not in files_data:
-            return generate_empty_preview_html()
+            return generate_empty_preview_html(), gr.update()
 
         file_info = files_data[file_id]
         if file_info.get('type') != 'medical':
-            return generate_empty_preview_html()
+            return generate_empty_preview_html(), gr.update()
+
+        file_path = file_info.get('path', '')
+        try:
+            medical_info = get_medical_file_info(file_path)
+            slice_counts = self._get_slice_counts(medical_info)
+            max_slices = slice_counts.get(axis, 1)
+
+            slice_value = max(0, min(slice_value, max_slices - 1))
+
+            slider_update = gr.update(
+                minimum=0,
+                maximum=max(0, max_slices - 1),
+                value=slice_value
+            )
+
+        except Exception as e:
+            print(f"Error updating slice: {e}")
+            slider_update = gr.update()
 
         updated_file_info = file_info.copy()
         updated_file_info['slice_index'] = slice_value
         updated_file_info['axis'] = axis
 
-        return generate_medical_file_preview_html(updated_file_info)
+        return generate_medical_file_preview_html(updated_file_info), slider_update
 
     def handle_medical_windowing(self, files_data: Dict[str, Any], selected_files: List[str],
                                  window_center: float, window_width: float) -> str:

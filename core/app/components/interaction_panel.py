@@ -232,7 +232,7 @@ def generate_medical_file_preview_html(file_info: Dict[str, Any]) -> str:
 
     medical_info = get_medical_file_info(file_path)
 
-    slice_index = file_info.get('slice_index', 50)
+    slice_index = file_info.get('slice_index', 0)
     axis = file_info.get('axis', 2)
     window_center = file_info.get('window_center', None)
     window_width = file_info.get('window_width', None)
@@ -293,8 +293,14 @@ def generate_medical_file_preview_html(file_info: Dict[str, Any]) -> str:
 
     image_html = ""
     if preview_image:
+        axis_names = {0: "Sagittal", 1: "Coronal", 2: "Axial"}
+        current_axis_name = axis_names.get(axis, "Unknown")
+
         image_html = f"""
         <div class="medical-image-preview">
+            <div class="medical-image-header">
+                Medical Image Preview - {current_axis_name} View (Slice {slice_index + 1})
+            </div>
             <div class="medical-image-container">
                 <img src="data:image/png;base64,{preview_image}" 
                      alt="{file_name}"

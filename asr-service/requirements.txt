@@ -3,5 +3,5 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 numpy==1.23.5
 dataoceanai-dolphin==20250519
-torchaudio==2.7.1
+torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
 python-multipart==0.0.7

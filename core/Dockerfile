@@ -26,6 +26,7 @@ RUN if [ "$REBUILD_MEDCHATINPUT" = "true" ] || [ ! -f "./lib/medchatinput/dist/g
     node -v && npm -v; \
     cd lib/medchatinput; \
     pip install --no-cache-dir -r requirements.txt; \
+    # pip install --no-cache-dir --trusted-host https://pypi.tuna.tsinghua.edu.cn -i https://pypi.tuna.tsinghua.edu.cn/simple/ -r requirements.txt; \
     gradio cc install && gradio cc build; \
     cd /app; \
     echo "✅ Medchatinput component built successfully"; \
@@ -48,6 +49,7 @@ WORKDIR /app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install --no-cache-dir --trusted-host https://pypi.tuna.tsinghua.edu.cn -i https://pypi.tuna.tsinghua.edu.cn/simple/ -r requirements.txt
 
 COPY --from=builder /app/lib/medchatinput/dist/gradio_medchatinput-0.0.1-py3-none-any.whl ./lib/medchatinput/dist/
 RUN pip install --no-cache-dir ./lib/medchatinput/dist/gradio_medchatinput-0.0.1-py3-none-any.whl

@@ -1,10 +1,10 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.responses import FileResponse, PlainTextResponse
 from contextlib import asynccontextmanager
 
 from config import TTS_CONFIG, FASTAPI_CONFIG, TAGS_METADATA, SERVER_CONFIG
-from models import VoicesResponse, TTSResponse, ErrorResponse, TTSRequest
+from models import VoicesResponse, TTSResponse, TTSRequest
 from core import load_voices_config, clear_model_cache
 import routes
 
@@ -12,14 +12,10 @@ import routes
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting TTS Microservice...")
-
     TTS_CONFIG["model_dir"].mkdir(parents=True, exist_ok=True)
-
     load_voices_config()
-
     print("✅ TTS Microservice ready!")
     yield
-
     print("🔄 Shutting down TTS Microservice...")
     clear_model_cache()
     print("✅ TTS Microservice shutdown complete!")
@@ -32,57 +28,49 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA,
     contact=FASTAPI_CONFIG["contact"],
     license_info=FASTAPI_CONFIG["license_info"],
-    root_path="/api/tts"
+    openapi_url="/api/tts/openapi.json",
+    docs_url="/api/tts/docs",
 )
 
+router = APIRouter(prefix="/api/tts")
 
-@app.get(
+
+@router.get(
     "/voices",
     response_model=VoicesResponse,
     tags=["Voices"],
     summary="Get available voices",
-    description="Returns a list of all available voices with their properties including language, quality, and speaker information."
+    description="Returns a list of all available voices..."
 )
 async def get_voices():
     return await routes.get_voices()
 
 
-@app.post(
+@router.post(
     "/synthesize",
     response_class=FileResponse,
     tags=["Speech Synthesis"],
     summary="Convert text to speech",
     responses={
-        200: {
-            "description": "Audio file generated successfully",
-            "content": {"audio/wav": {}},
-            "headers": {
-                "X-Audio-Duration": {"description": "Audio duration in seconds"},
-                "X-Voice-Key": {"description": "Voice used for synthesis"},
-                "X-Speaker-ID": {"description": "Speaker ID used"},
-                "X-Speed": {"description": "Speed multiplier used"}
-            }
-        },
-        400: {"model": ErrorResponse, "description": "Invalid request parameters"},
-        500: {"model": ErrorResponse, "description": "Speech synthesis failed"}
+        200: {"description": "Audio file generated successfully", "...": "..."}
     }
 )
 async def synthesize_speech(request: TTSRequest):
     return await routes.synthesize_speech(request)
 
 
-@app.delete(
+@router.delete(
     "/cache",
     response_model=TTSResponse,
     tags=["Health & Management"],
     summary="Clear model cache",
-    description="Clear all cached voice models to free up memory. Models will be reloaded on next use."
+    description="Clear all cached voice models..."
 )
 async def clear_cache():
     return await routes.clear_cache()
 
 
-@app.get(
+@router.get(
     "/health",
     response_class=PlainTextResponse,
     tags=["Health & Management"],
@@ -92,6 +80,7 @@ async def clear_cache():
 async def health_check():
     return await routes.health_check()
 
+app.include_router(router)
 
 if __name__ == "__main__":
     uvicorn.run(

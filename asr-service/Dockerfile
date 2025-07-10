@@ -1,3 +1,4 @@
+# syntax=docker.io/docker/dockerfile:1.7-labs
 FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -39,6 +40,8 @@ RUN mkdir -p data/dolphin/models data/dolphin/assets && \
     wget -O data/dolphin/assets/feats_stats.npz "https://huggingface.co/DataoceanAI/dolphin-base/resolve/main/feats_stats.npz"; \
     fi
 
+# COPY wheels/ ./wheels/
+# RUN pip install --no-cache-dir --trusted-host https://pypi.tuna.tsinghua.edu.cn -i https://pypi.tuna.tsinghua.edu.cn/simple/ ./wheels/*.whl && rm -rf ./wheels/
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -46,6 +49,7 @@ RUN apt-get purge -y gcc g++ build-essential wget && \
     apt-get autoremove -y && \
     apt-get clean
 
+# COPY --exclude=wheels  . .
 COPY . .
 
 RUN useradd -m -u 1000 asruser && \

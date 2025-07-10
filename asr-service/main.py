@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, APIRouter
 from fastapi.responses import PlainTextResponse
 from contextlib import asynccontextmanager
 
@@ -41,11 +41,14 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA,
     contact=FASTAPI_CONFIG["contact"],
     license_info=FASTAPI_CONFIG["license_info"],
-    root_path="/api/asr"
+    openapi_url="/api/asr/openapi.json",
+    docs_url="/api/asr/docs",
 )
 
+router = APIRouter(prefix="/api/asr")
 
-@app.get(
+
+@router.get(
     "/languages",
     response_model=LanguagesResponse,
     tags=["Languages"],
@@ -56,7 +59,7 @@ async def get_languages():
     return await routes.get_languages()
 
 
-@app.get(
+@router.get(
     "/models", 
     response_model=ModelsResponse,
     tags=["Models"],
@@ -67,7 +70,7 @@ async def get_models():
     return await routes.get_models()
 
 
-@app.post(
+@router.post(
     "/transcribe",
     response_model=TranscribeResponse,
     tags=["Transcription"],
@@ -88,7 +91,7 @@ async def transcribe_audio(
     return await routes.transcribe_audio(audio, language, region, model)
 
 
-@app.post(
+@router.post(
     "/transcribe/base64",
     response_model=TranscribeResponse, 
     tags=["Transcription"],
@@ -104,7 +107,7 @@ async def transcribe_base64(request: ASRRequest):
     return await routes.transcribe_base64(request)
 
 
-@app.delete(
+@router.delete(
     "/cache",
     tags=["Health & Management"],
     summary="Clear model cache",
@@ -114,7 +117,7 @@ async def clear_cache():
     return await routes.clear_cache()
 
 
-@app.get(
+@router.get(
     "/health",
     response_class=PlainTextResponse,
     tags=["Health & Management"],
@@ -124,6 +127,7 @@ async def clear_cache():
 async def health_check():
     return await routes.health_check()
 
+app.include_router(router)
 
 if __name__ == "__main__":
     uvicorn.run(

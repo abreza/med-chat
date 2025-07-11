@@ -13,7 +13,7 @@ class SettingsHandlers:
         self.llm_client = llm_client
 
     def handle_model_change(self, model_name: str) -> str:
-        self.llm_client.set_model(model_name)
+        self.llm_client.current_model = model_name
         vision_capable = ModelManager.is_vision_capable(model_name)
         vision_html = f"🔍 Vision Support: {'Yes' if vision_capable else 'No'}"
         return vision_html

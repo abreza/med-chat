@@ -213,7 +213,7 @@ class InteractionHandlers:
             image_files, text_contents = extract_selected_files_for_llm(
                 files_data, selected_files)
 
-            current_model = self.llm_client.get_current_model()
+            current_model = self.llm_client.current_model
             has_images = len(image_files) > 0
             model_supports_vision = ModelManager.is_vision_capable(
                 current_model)
@@ -273,7 +273,7 @@ class InteractionHandlers:
             return self._generate_error_html("OCR is only available for image files."), gr.update(interactive=True)
 
         try:
-            current_model = self.llm_client.get_current_model()
+            current_model = self.llm_client.current_model
             model_supports_vision = ModelManager.is_vision_capable(
                 current_model)
 

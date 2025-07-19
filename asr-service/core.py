@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import base64
 from typing import Optional, Dict, List, Any
+import torch
 import dolphin
 from config import ASR_CONFIG, ASR_MODELS, ASR_ASSET_URLS
 
@@ -62,7 +63,6 @@ def setup_dolphin_model(model_key: str = "small") -> bool:
     try:
         print(f"Loading Dolphin ASR model: {model_key}")
 
-        # Ensure assets and model are downloaded
         if not ensure_assets_downloaded():
             print("Failed to download required assets")
             return False
@@ -72,8 +72,7 @@ def setup_dolphin_model(model_key: str = "small") -> bool:
             print(f"Failed to download model: {model_key}")
             return False
 
-        # Determine device
-        device = "cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Load model
         model = dolphin.load_model(

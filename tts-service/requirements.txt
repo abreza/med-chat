@@ -12,7 +12,7 @@ piper-phonemize-fix==1.2.1
 pandas==2.3.1
 pyarrow==21.0.0
 hazm==0.10.0
-torch==2.7.1
+torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
 optimum==1.26.1
 onnx==1.18.0
 transformers==4.52.4

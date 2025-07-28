@@ -16,26 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 RUN pip install --no-cache-dir gdown==5.2.0
-# RUN pip install --no-cache-dir --trusted-host https://pypi.tuna.tsinghua.edu.cn -i https://pypi.tuna.tsinghua.edu.cn/simple/ gdown==5.2.0
 
-COPY data/ ./data/
-
-RUN mkdir -p data/piper/models data/piper && \
-    if [ ! -f "data/piper/voices.json" ]; then \
-    echo "Downloading voices.json..."; \
-    wget -O data/piper/voices.json "https://huggingface.co/rhasspy/piper-voices/raw/v1.0.0/voices.json"; \
-    fi && \
-    if [ ! -d "data/piper/models" ] || [ -z "$(ls -A data/piper/models/ 2>/dev/null)" ]; then \
-    echo "Downloading piper voices..."; \
-    gdown "13pxf4H0-2phQVUe_Cyvdvg5SKKaSL2tc" -O piper_voices.zip && \
-    unzip -q piper_voices.zip -d data/piper/models/ && \
-    rm piper_voices.zip; \
-    fi
-
+COPY prepare_data.sh .
+RUN chmod +x ./prepare_data.sh
+RUN ./prepare_data.sh
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-# RUN pip install --no-cache-dir --trusted-host https://pypi.tuna.tsinghua.edu.cn -i https://pypi.tuna.tsinghua.edu.cn/simple/ -r requirements.txt
+RUN pip install --no-cache-dir wheels/piper_tts_persian_phonemizer-1.2.0+custom.persian.phonemizer-py3-none-any.whl
 
 RUN apt-get purge -y gcc g++ build-essential wget unzip && \
     apt-get autoremove -y && \
@@ -50,6 +38,6 @@ USER ttsuser
 EXPOSE 8001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
+    CMD curl -f http://localhost:8001/api/tts/health || exit 1
 
 CMD ["python", "main.py"]

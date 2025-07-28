@@ -1,5 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, APIRouter
+
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 from contextlib import asynccontextmanager
 
@@ -30,6 +32,16 @@ app = FastAPI(
     license_info=FASTAPI_CONFIG["license_info"],
     openapi_url="/api/tts/openapi.json",
     docs_url="/api/tts/docs",
+)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 router = APIRouter(prefix="/api/tts")

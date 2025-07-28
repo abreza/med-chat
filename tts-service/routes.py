@@ -1,13 +1,15 @@
 import os
+import re
 import tempfile
 import wave
 from fastapi import HTTPException, status
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from starlette.background import BackgroundTask
-from models import TTSRequest
+from models import TTSRequest, OutputFormat
 from core import (
     get_voices_config, load_voice_model,
-    configure_wav_file, prepare_synthesis_kwargs, clear_model_cache
+    configure_wav_file, prepare_synthesis_kwargs, clear_model_cache,
+    synthesize_stream_audio, add_wav_header
 )
 
 
@@ -62,43 +64,18 @@ async def synthesize_speech(request: TTSRequest):
                 detail=f"Speaker ID {request.speaker_id} not available. Voice has {num_speakers} speakers (0-{num_speakers-1})"
             )
 
-        temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-        temp_file_path = temp_file.name
-        temp_file.close()
+        synthesis_kwargs = prepare_synthesis_kwargs(
+            request.speaker_id, num_speakers, request.speed,
+            request.noise_scale, request.noise_scale_w
+        )
+        
+        if request.output_format == OutputFormat.STREAM:
+            synthesis_kwargs['sentence_silence'] = request.sentence_silence or 0.0
 
-        try:
-            with wave.open(temp_file_path, 'wb') as wav_file:
-                configure_wav_file(wav_file, model.config.sample_rate)
-
-                synthesis_kwargs = prepare_synthesis_kwargs(
-                    request.speaker_id, num_speakers, request.speed,
-                    request.noise_scale, request.noise_scale_w
-                )
-
-                model.synthesize(request.text, wav_file, **synthesis_kwargs)
-
-            with wave.open(temp_file_path, 'rb') as wav_file:
-                frames = wav_file.getnframes()
-                sample_rate = wav_file.getframerate()
-                duration = frames / sample_rate
-
-            return FileResponse(
-                temp_file_path,
-                media_type="audio/wav",
-                filename=f"tts_output_{request.voice_key}.wav",
-                headers={
-                    "X-Audio-Duration": str(duration),
-                    "X-Voice-Key": request.voice_key,
-                    "X-Speaker-ID": str(request.speaker_id),
-                    "X-Speed": str(request.speed)
-                },
-                background=BackgroundTask(cleanup_temp_file, temp_file_path)
-            )
-
-        except Exception as e:
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
-            raise e
+        if request.output_format == OutputFormat.STREAM:
+            return await _synthesize_streaming(model, request, synthesis_kwargs)
+        else:
+            return await _synthesize_file(model, request, synthesis_kwargs, voice_info)
 
     except HTTPException:
         raise
@@ -107,6 +84,72 @@ async def synthesize_speech(request: TTSRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Speech synthesis failed: {str(e)}"
         )
+
+
+async def _synthesize_file(model, request: TTSRequest, synthesis_kwargs: dict, voice_info: dict):
+    temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+    temp_file_path = temp_file.name
+    temp_file.close()
+
+    try:
+        with wave.open(temp_file_path, 'wb') as wav_file:
+            configure_wav_file(wav_file, model.config.sample_rate)
+            
+            processed_text = re.sub(r'\n', ' ', request.text)
+            processed_text = re.sub(r'[?.:;!!؟]|\.{3}', '،', processed_text)
+
+            model.synthesize(processed_text, wav_file, **synthesis_kwargs)
+
+        with wave.open(temp_file_path, 'rb') as wav_file:
+            frames = wav_file.getnframes()
+            sample_rate = wav_file.getframerate()
+            duration = frames / sample_rate
+
+        return FileResponse(
+            temp_file_path,
+            media_type="audio/wav",
+            filename=f"tts_output_{request.voice_key}.wav",
+            headers={
+                "X-Audio-Duration": str(duration),
+                "X-Voice-Key": request.voice_key,
+                "X-Speaker-ID": str(request.speaker_id),
+                "X-Speed": str(request.speed),
+                "X-Output-Format": "file"
+            },
+            background=BackgroundTask(cleanup_temp_file, temp_file_path)
+        )
+
+    except Exception as e:
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        raise e
+
+
+async def _synthesize_streaming(model, request: TTSRequest, synthesis_kwargs: dict):
+    def audio_stream_generator():
+        try:
+            wav_header = add_wav_header(model.config.sample_rate)
+            yield wav_header
+            
+            for audio_chunk in synthesize_stream_audio(model, request.text, **synthesis_kwargs):
+                yield audio_chunk
+                
+        except Exception as e:
+            print(f"❌ Streaming error: {e}")
+            raise
+
+    return StreamingResponse(
+        audio_stream_generator(),
+        media_type="audio/wav",
+        headers={
+            "X-Voice-Key": request.voice_key,
+            "X-Speaker-ID": str(request.speaker_id),
+            "X-Speed": str(request.speed),
+            "X-Output-Format": "stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
+    )
 
 
 async def clear_cache():

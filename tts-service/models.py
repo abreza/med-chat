@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Literal
+from enum import Enum
 
+class OutputFormat(str, Enum):
+    FILE = "file"
+    STREAM = "stream"
 
 class TTSRequest(BaseModel):
     text: str = Field(
@@ -41,6 +45,17 @@ class TTSRequest(BaseModel):
         ge=0.0,
         le=1.0,
         example=0.8
+    )
+    output_format: OutputFormat = Field(
+        OutputFormat.FILE,
+        description="Output format: 'file' returns complete audio file, 'stream' returns chunked audio"
+    )
+    sentence_silence: Optional[float] = Field(
+        0.0,
+        description="Seconds of silence after each sentence (streaming mode only)",
+        ge=0.0,
+        le=5.0,
+        example=0.0
     )
 
 

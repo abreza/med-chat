@@ -1,9 +1,19 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
-numpy==1.26.4
+numpy==1.24.3
 piper-phonemize-fix==1.2.1
-piper-tts==1.2.0
-onnxruntime==1.22.0
+# piper-tts==1.2.0
+# onnxruntime==1.22.0
 
-# maybe need pip install --no-deps piper-tts==1.2.0 onnxruntime==1.22.0
+# maybe need pip install --no-deps piper-tts==1.2.0 onnxruntime==1.22.1
+# pip install wheels/piper_tts_persian_phonemizer-1.2.0+custom.persian.phonemizer-py3-none-any.whl
+
+pandas==2.3.1
+pyarrow==21.0.0
+hazm==0.10.0
+torch==2.7.1
+optimum==1.26.1
+onnx==1.18.0
+transformers==4.52.4
+# if need: onnxruntime-gpu==1.22.0

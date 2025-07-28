@@ -4,7 +4,9 @@ from pathlib import Path
 
 TTS_CONFIG = {
     "model_dir": Path(os.getenv("TTS_MODEL_DIR", "./data/piper/models")),
-    "voices_file": Path(os.getenv("TTS_VOICES_FILE", "./data/piper/voices.json"))
+    "voices_file": Path(os.getenv("TTS_VOICES_FILE", "./data/piper/voices.json")),
+    "use_cuda": os.getenv("USE_CUDA", "false").lower() == "true",
+    "ezafe_model_path": os.getenv("EZAFE_MODEL_PATH")
 }
 
 

@@ -13,7 +13,7 @@ class TTSRequest(BaseModel):
     voice_key: str = Field(
         ...,
         description="Voice identifier from the available voices list",
-        example="fa_IR-amir-medium"
+        example="fa_IR-mana-medium"
     )
     speaker_id: Optional[int] = Field(
         0,

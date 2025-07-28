@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 from typing import Optional, Tuple
 from piper.voice import PiperVoice
 from config import TTS_CONFIG
@@ -65,6 +67,7 @@ def load_voice_model(voice_key: str):
     if voice_key in model_cache:
         return model_cache[voice_key]
 
+    temp_config_path = None
     try:
         model_path, config_path = get_voice_file_paths(voice_key)
 
@@ -75,7 +78,36 @@ def load_voice_model(voice_key: str):
             raise FileNotFoundError(
                 f"Voice files not found: {model_path}, {config_path}")
 
-        model = PiperVoice.load(str(model_path))
+        final_config_path = str(config_path)
+        ezafe_model_path = TTS_CONFIG.get("ezafe_model_path")
+
+        if ezafe_model_path and os.path.exists(ezafe_model_path):
+            print(f"ℹ️ Ezafe model found at '{ezafe_model_path}', updating config...")
+            
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+            
+            config_data['ezafe_model_path'] = ezafe_model_path
+
+            with tempfile.NamedTemporaryFile(
+                mode='w', delete=False, suffix=".json", encoding='utf-8', dir="/tmp"
+            ) as temp_f:
+                json.dump(config_data, temp_f)
+                temp_config_path = temp_f.name
+            
+            final_config_path = temp_config_path
+            print(f"📝 Using temporary config: {final_config_path}")
+
+        use_cuda = TTS_CONFIG.get("use_cuda", False)
+        print(f"ℹ️ CUDA usage set to: {use_cuda}")
+        
+        print(TTS_CONFIG, final_config_path)
+
+        model = PiperVoice.load(
+            model_path=str(model_path), 
+            config_path=final_config_path, 
+            use_cuda=use_cuda
+        )
         model_cache[voice_key] = model
 
         print(f"✅ Loaded voice model: {voice_key}")
@@ -84,6 +116,10 @@ def load_voice_model(voice_key: str):
     except Exception as e:
         print(f"❌ Error loading voice model {voice_key}: {e}")
         return None
+    finally:
+        if temp_config_path and os.path.exists(temp_config_path):
+            os.unlink(temp_config_path)
+            print(f"🗑️ Removed temporary config file: {temp_config_path}")
 
 
 def configure_wav_file(wav_file, sample_rate: int):

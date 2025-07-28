@@ -7,3 +7,5 @@ asr-service/data/*
 certbot/
 asr-service/wheels
 asr-service/nltk_data
+tts-service/ezafe_model_quantized/*
+wheels/

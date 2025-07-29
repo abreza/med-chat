@@ -50,7 +50,7 @@ class ConversationManager:
         if not files:
             return {"role": "user", "content": text}
 
-        if self.llm_client.get_current_model() and any(files):
+        if any(files):
             content_parts = []
 
             if text.strip():

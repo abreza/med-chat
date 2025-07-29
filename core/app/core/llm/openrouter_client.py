@@ -20,16 +20,6 @@ class OpenRouterClient:
         except Exception as e:
             return handle_api_error(e)
 
-    def set_model(self, model_name: str) -> bool:
-        from .model_manager import ModelManager
-        if ModelManager.is_valid_model(model_name):
-            self.current_model = model_name
-            return True
-        return False
-
-    def get_current_model(self) -> str:
-        return self.current_model
-
     def _get_system_message(self) -> Dict[str, str]:
         return {
             "role": "system",

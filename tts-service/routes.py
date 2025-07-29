@@ -2,32 +2,17 @@ import os
 import re
 import tempfile
 import wave
-from fastapi import HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from starlette.background import BackgroundTask
-from models import TTSRequest, OutputFormat
+from models import TTSRequest, OutputFormat, TTSResponse, VoicesResponse
 from core import (
     get_voices_config, load_voice_model,
     configure_wav_file, prepare_synthesis_kwargs, clear_model_cache,
     synthesize_stream_audio, add_wav_header
 )
 
-
-async def get_voices():
-    voices_config = get_voices_config()
-    return {
-        "success": True,
-        "voices": {
-            voice_key: {
-                "name": voice_info["name"],
-                "language": voice_info["language"],
-                "quality": voice_info["quality"],
-                "num_speakers": voice_info["num_speakers"],
-                "speaker_names": list(voice_info["speaker_id_map"].keys()) if voice_info["speaker_id_map"] else []
-            }
-            for voice_key, voice_info in voices_config.items()
-        }
-    }
+router = APIRouter(prefix="/api/tts")
 
 
 def cleanup_temp_file(file_path: str):
@@ -38,6 +23,46 @@ def cleanup_temp_file(file_path: str):
         pass
 
 
+@router.get(
+    "/voices",
+    response_model=VoicesResponse,
+    tags=["Voices"],
+    summary="Get available voices",
+    description="Returns a list of all available voices."
+)
+async def get_voices():
+    voices_config = get_voices_config()
+    return {
+        "success": True,
+        "voices": {
+            voice_key: {
+                "name": voice_info["name"],
+                "language": voice_info["language"],
+                "quality": voice_info["quality"],
+                "num_speakers": voice_info["num_speakers"],
+                "speaker_names": list(voice_info["speaker_id_map"].keys()) if voice_info.get("speaker_id_map") else []
+            }
+            for voice_key, voice_info in voices_config.items()
+        }
+    }
+
+
+@router.post(
+    "/synthesize",
+    response_class=FileResponse,
+    tags=["Speech Synthesis"],
+    summary="Convert text to speech",
+    responses={
+        200: {
+            "description": "Audio file generated successfully",
+            "content": {"audio/wav": {}},
+            "headers": {
+                "X-Audio-Duration": {"description": "Duration of the audio in seconds"},
+                "X-Voice-Key": {"description": "Voice used for synthesis"},
+            },
+        }
+    }
+)
 async def synthesize_speech(request: TTSRequest):
     try:
         voices_config = get_voices_config()
@@ -152,6 +177,13 @@ async def _synthesize_streaming(model, request: TTSRequest, synthesis_kwargs: di
     )
 
 
+@router.delete(
+    "/cache",
+    response_model=TTSResponse,
+    tags=["Health & Management"],
+    summary="Clear model cache",
+    description="Clears all cached voice models from memory to free up resources."
+)
 async def clear_cache():
     cached_count = clear_model_cache()
     return {
@@ -160,5 +192,12 @@ async def clear_cache():
     }
 
 
+@router.get(
+    "/health",
+    response_class=PlainTextResponse,
+    tags=["Health & Management"],
+    summary="Health check",
+    description="Simple health check that returns a 'healthy' string."
+)
 async def health_check():
     return PlainTextResponse("healthy")
